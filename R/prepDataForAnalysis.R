@@ -431,7 +431,7 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
               sep="\t", row.names=FALSE)
 
   # Print location of output file
-  cat("Data formatted for analysis in Program DISTANCE was written to:\n", outputFile)
+  cat("The dataset formatted for analysis in Program DISTANCE was written to:\n", outputFile)
 
 
 
