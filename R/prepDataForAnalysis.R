@@ -451,8 +451,8 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
   cat("Assuming right-truncation at largest adjusted distance interval cutpoint, number of individuals in analysis: ", n.detects.ind.trunc, "\n")
 
   cat("Number of groups (clusters) that had missing flight heights: ", n.NA, "\n")
-  cat("Mean flight height at detections - before imputing missing flight heights (ft): ", round(agl.all, 2), "\n")
-  cat("Mean flight height at detections - after imputing missing flight heights (ft): ", round(agl.obs, 2), "\n")
+  cat("Mean flight height (ft) at detections - before imputing missing flight heights: ", round(agl.all, 2), "\n")
+  cat("Mean flight height (ft) at detections - after imputing missing flight heights: ", round(agl.obs, 2), "\n")
 
   cat("Nominal distance interval cutpoints (m): ", c(0, 20, 45, 80, 145, 200), "\n")
   cat("Adjusted distance interval cutpoints (m): ", round(cuts, 2), "\n")
