@@ -68,6 +68,9 @@
 #'
 #' }
 #' @author Jason D. Carlisle, \email{jcarlisle@@west-inc.com}
+#' @references Guenzel, R.J. 2007. Procedures for Estimating Pronghorn Abundance
+#' in Wyoming Using Aerial Line Transect Sampling. Wyoming Game and Fish Department.
+#' Cheyenne, WY, USA.
 #' @importFrom readxl read_excel
 #' @importFrom plyr ddply summarize
 #' @importFrom stats dist na.omit
@@ -436,23 +439,23 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
   # Print summary results
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   cat("\n#%%%%%%%%%%%%%%%%%%%%%%%%%%%#\n")
-  cat("SUMMARY")
+  cat("DATA SUMMARY")
   cat("\n#%%%%%%%%%%%%%%%%%%%%%%%%%%%#\n")
 
-  cat("Number of transects: ", n.trans)
-  cat("Total transect length surveyed (km): ", total.km)
-  cat("Number of groups (clusters) detected: ", n.detects)
-  cat("Assuming right-truncation at largest adjusted distance interval cutpoint, number of groups (clusters) in analysis: ", n.detects.trunc)
+  cat("Number of transects: ", n.trans, "\n")
+  cat("Total transect length surveyed (km): ", total.km, "\n")
+  cat("Number of groups (clusters) detected: ", n.detects, "\n")
+  cat("Assuming right-truncation at largest adjusted distance interval cutpoint, number of groups (clusters) in analysis: ", n.detects.trunc, "\n")
 
-  cat("Number of individuals detected: ", n.detects.ind)
-  cat("Assuming right-truncation at largest adjusted distance interval cutpoint, number of individuals in analysis: ", n.detects.ind.trunc)
+  cat("Number of individuals detected: ", n.detects.ind, "\n")
+  cat("Assuming right-truncation at largest adjusted distance interval cutpoint, number of individuals in analysis: ", n.detects.ind.trunc, "\n")
 
-  cat("Number of groups (clusters) that had missing flight heights: ", n.NA)
-  cat("Mean flight height at detections - before imputing missing flight heights (ft): ", round(agl.all, 2))
-  cat("Mean flight height at detections - after imputing missing flight heights (ft): ", round(agl.obs, 2))
+  cat("Number of groups (clusters) that had missing flight heights: ", n.NA, "\n")
+  cat("Mean flight height at detections - before imputing missing flight heights (ft): ", round(agl.all, 2), "\n")
+  cat("Mean flight height at detections - after imputing missing flight heights (ft): ", round(agl.obs, 2), "\n")
 
-  cat("\nNominal distance interval cutpoints (m): ", c(0, 20, 45, 80, 145, 200))
-  cat("Adjusted distance interval cutpoints (m): ", round(cuts, 2))
+  cat("Nominal distance interval cutpoints (m): ", c(0, 20, 45, 80, 145, 200), "\n")
+  cat("Adjusted distance interval cutpoints (m): ", round(cuts, 2), "\n")
 
 
 

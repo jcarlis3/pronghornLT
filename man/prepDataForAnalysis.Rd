@@ -89,6 +89,11 @@ prepDataForAnalysis(inputFile = "C:/Users/myUserName/Desktop/myInputFile.xlsx",
                     outputFile = "C:/Users/myUserName/Desktop/myOutputFile.txt")
 }
 }
+\references{
+Guenzel, R.J. 2007. Procedures for Estimating Pronghorn Abundance
+in Wyoming Using Aerial Line Transect Sampling. Wyoming Game and Fish Department.
+Cheyenne, WY, USA.
+}
 \author{
 Jason D. Carlisle, \email{jcarlisle@west-inc.com}
 }
