@@ -1,7 +1,7 @@
 Package: pronghornLT
 Type: Package
 Title: Utilities to Prepare Pronghorn Line-transect Survey Data for Analysis
-Version: 0.9.1
+Version: 1.0.0
 Date: 2019-07-03
 Authors@R: as.person(c(
     "Jason D. Carlisle <jcarlisle@west-inc.com> [aut, cre]",
