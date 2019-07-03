@@ -116,6 +116,11 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
   # Drop the "End survey" event
   x <- x[x$event != "End survey", ]
 
+  # Drop any rows with NA in event
+  # An example dataset from Lee for Centennial included a row with date and
+  # time, but all other rows were NAs
+  x <- x[!is.na(x$event), ]
+
 
   # Make siteID a factor (might come in as numeric or character)
   x$siteID <- as.factor(x$siteID)
