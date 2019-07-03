@@ -366,10 +366,47 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
   # No checks implemented at this time
 
 
+  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # Format to have format expected by DISTANCE
+  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+
+  # Merge into what Program DISTANCE calls a "flat file"
+  # A row for each detection, that includes the transect length
+  # Plus a row for each transect where nothing was detected (with NAs for most cols)
+  distData <- merge(sdf, ddf, all=TRUE)
+  distData$id <- NULL
+
+
+  # Make some column names easier to work with
+  names(distData)[names(distData) == "siteID"] <- "lineLabel"
+  names(distData)[names(distData) == "lengthKm"] <- "lineLengthKm"
+  names(distData)[names(distData) == "x"] <- "coordsX"
+  names(distData)[names(distData) == "y"] <- "coordsY"
+  names(distData)[names(distData) == "agl"] <- "flightHeightFt"
+  names(distData)[names(distData) == "s"] <- "clusterSize"
+  names(distData)[names(distData) == "band"] <- "distBand"
+  names(distData)[names(distData) == "adjustedDist"] <- "adjustedDistM"
+
+
+  # Fix odd text formatting from CyberTracker which added "; Cluster size" into
+  # the band column
+  distData$distBand <- gsub("; Cluster size", "", distData$distBand)
+
+
+  # Do some rounding to make text files easier to work with
+  # (when aligning columns in DISTANCE)
+  distData$lineLengthKm <- round(distData$lineLengthKm, 3)
+  distData$coordsX <- round(distData$coordsX, 0)
+  distData$coordsY <- round(distData$coordsY, 0)
+  distData$flightHeightFt <- round(distData$flightHeightFt, 2)
+  distData$adjustedDistM <- round(distData$adjustedDistM, 2)
+
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Calculate study summaries to aid troubleshooting
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+
+
   # Number of transects
   n.trans <- length(unique(sdf$siteID))
 
@@ -398,31 +435,12 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
   agl.obs
 
 
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Format to have format expected by DISTANCE
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
-  # Merge into what Program DISTANCE calls a "flat file"
-  # A row for each detection, that includes the transect length
-  # Plus a row for each transect where nothing was detected (with NAs for most cols)
-  distData <- merge(sdf, ddf, all=TRUE)
-  distData$id <- NULL
+  # Total rows in output file
+  n.rows <- nrow(distData)
 
-
-  # Make some column names easier to work with
-  names(distData)[names(distData) == "siteID"] <- "lineLabel"
-  names(distData)[names(distData) == "lengthKm"] <- "lineLengthKm"
-  names(distData)[names(distData) == "x"] <- "coordsX"
-  names(distData)[names(distData) == "y"] <- "coordsY"
-  names(distData)[names(distData) == "agl"] <- "flightHeightFt"
-  names(distData)[names(distData) == "s"] <- "clusterSize"
-  names(distData)[names(distData) == "band"] <- "distBand"
-  names(distData)[names(distData) == "adjustedDist"] <- "adjustedDistM"
-
-
-  # Fix odd text formatting from CyberTracker which added "; Cluster size" into
-  # the band column
-  distData$distBand <- gsub("; Cluster size", "", distData$distBand)
+  # Number of transects with no detections
+  n.trans.no <- sum(is.na(distData$adjustedDistM))
 
 
 
@@ -433,7 +451,9 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
   # Tab-delimited text file
   write.table(distData,
               file=outputFile,
-              sep="\t", row.names=FALSE)
+              sep="\t",
+              na="",  # Program DISTANCE needs blanks instead of NAs
+              row.names=FALSE)
 
   # Print location of output file
   cat("The dataset formatted for analysis in Program DISTANCE was written to:\n", outputFile)
@@ -443,11 +463,13 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Print summary results
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  cat("\n#%%%%%%%%%%%%%%%%%%%%%%%%%%%#\n")
+  cat("\n#%%%%%%%%%%#\n")
   cat("DATA SUMMARY")
-  cat("\n#%%%%%%%%%%%%%%%%%%%%%%%%%%%#\n")
+  cat("\n#%%%%%%%%%%#\n")
 
+  cat("Total number of rows (excluding column names) to import to DISTANCE: ", n.rows, "\n")
   cat("Number of transects: ", n.trans, "\n")
+  cat("Number of transects with no detections: ", n.trans.no, "\n")
   cat("Total transect length surveyed (km): ", total.km, "\n")
   cat("Number of groups (clusters) detected: ", n.detects, "\n")
   cat("Assuming right-truncation at largest adjusted distance interval cutpoint, number of groups (clusters) in analysis: ", n.detects.trunc, "\n")
