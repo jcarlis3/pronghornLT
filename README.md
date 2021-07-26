@@ -19,4 +19,8 @@ require(pronghornLT)
 ```
 
 ## How to use
-Run `?prepDataForAnalysis` in the R console to see the help file and directions for using the package's only function.
+Run `?prepDataForAnalysis` in the R console to see the help document and directions for using the package's only function.
+Simply running the function with default inputs will prompt the user to specify the input file and sheet interactively, and write an output file to the same directory as the input file.
+```
+prepDataForAnalysis()
+```
