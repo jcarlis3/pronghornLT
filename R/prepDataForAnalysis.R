@@ -5,15 +5,19 @@
 #' distance-sampling analysis.
 #' The prepped data is written to file, and some summaries of the data are
 #' printed to the R console.
-#' @param inputFile  The path and name of the Excel file containing the input
-#' data.  The input data is the data output from CyberTracker.  Excel files with
-#' extension \code{.xls} or \code{.xlsx} are allowed.  Note the direction of
-#' slashes in the path needs to follow R expectations (use \code{/} instead of
-#' the Windows default of \code{\\}), that the file name and extension are included,
-#' and that the path needs to start and end with quotes.
+#' @param inputFile  The data output from CyberTracker to format for input to
+#' Program DISTANCE.  Excel files with extension \code{.xls} or \code{.xlsx} are
+#' allowed. If \code{inputFile = NULL} (the default), the user is
+#' prompted to select the input file interactively. Alternatively, the user can
+#' specify the path and name of the Excel file containing the input data.
+#' Note the direction of slashes in the path must follow R expectations
+#' (use \code{/} instead of the Windows default of \code{\\}),
+#' that the file name and extension must be included,
+#' and that the path must start and end with quotes.
 #' Example:  \code{"C:/Users/jcarlisle/Desktop/myInputFile.xlsx"}.
 #' This function expects the following columns (named as shown) in the
-#' \code{inputFile}.  The order of the columns does not matter, and
+#' \code{inputFile}.  The order of the columns does not matter (except in the
+#' case of the "Cluster size" columns, see below), and
 #' any additional columns are ignored:
 #' \describe{
 #'  \item{Transect number}{Unique name of each transect.}
@@ -29,11 +33,25 @@
 #'  the distance band the pronghorn were detected in.}
 #' }
 #' @param inputSheet  The sheet (or tab) within the above-specified Excel file
-#' that should be read in.  Specify as the name of the sheet (e.g., \code{"Sheet1"}
-#' or \code{"inputData"}) or as the numbered position of the sheet within the file
-#' (e.g., \code{1}).
+#' that should be read in. If \code{inputSheet = NULL} (the default), the names
+#' of the sheets in the \code{inputFile} are printed to the console, and the user
+#' is prompted to select the sheet name interactively.  Alternatively,
+#' specify as the name of the sheet (e.g., \code{"Sheet1"} or \code{"inputData"})
+#' or as the numbered position of the sheet within the file (e.g., \code{1}).
 #' @param outputFile The path and name of the tab-delimited text file to write
 #' out containing the output data ready for import into Program DISTANCE.
+#' If \code{outputFile = NULL} (the default), the file will be written to the
+#' same directory as the \code{inputFile}, with \code{"PreppedData_"} prepended
+#' to the file name of the \code{inputFile}.  E.g, if
+#' \code{inputFile} is \code{"C:/Users/jcarlisle/Desktop/myInputFile.xlsx"} and
+#' \code{outputFile = NULL}, the output will be written to
+#' \code{"C:/Users/jcarlisle/Desktop/PreppedData_myInputFile.txt"}.
+#' Alternatively, the user can specify the path and name of the text file.
+#' Note the direction of slashes in the path must follow R expectations
+#' (use \code{/} instead of the Windows default of \code{\\}),
+#' that the file name and extension must be included,
+#' and that the path must start and end with quotes.
+#' #' Example:  \code{"C:/Users/jcarlisle/Desktop/myOutputFile.txt"}.
 #' The column names in the output file are standardized to use names similar to
 #' Program DISTANCE (making import less error-prone) and to clarify units:
 #' \describe{
@@ -71,13 +89,13 @@
 #' @references Guenzel, R.J. 2007. Procedures for Estimating Pronghorn Abundance
 #' in Wyoming Using Aerial Line Transect Sampling. Wyoming Game and Fish Department.
 #' Cheyenne, WY, USA.
-#' @importFrom readxl read_excel
+#' @importFrom readxl excel_sheets read_excel
 #' @importFrom plyr ddply summarize
 #' @importFrom stats dist na.omit
-#' @importFrom utils write.table
+#' @importFrom utils menu write.table
 #' @export
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' # Read in Sheet1 of myInputFile.xlsx, and write out myOutputFile.txt
 #' prepDataForAnalysis(inputFile = "C:/Users/myUserName/Desktop/myInputFile.xlsx",
 #'                     inputSheet = "Sheet1",
@@ -87,13 +105,59 @@
 
 
 
-prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
+prepDataForAnalysis <- function(inputFile = NULL,
+                                inputSheet = NULL,
+                                outputFile = NULL) {
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Read in Excel file exported by CyberTracker
+  # File paths ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+
+  # Allow the user to interactively select the input Excel file
+  if(is.null(inputFile)) {
+    inputFile <- file.choose()
+  }
+
+
+  # Have the user select which sheet of the selected input Excel file to use
+  if(is.null(inputSheet)) {
+    sheetNames <- readxl::excel_sheets(inputFile)
+    sheetIndex <- menu(sheetNames,
+                       title="Which sheet in the Excel file contains the input data?")
+    inputSheet <- sheetNames[sheetIndex]
+  }
+
+
+  # Set output file path to same as input file path if none provided
+  # And default file name that prepends "PreppedData_" to the input filename
+  if(is.null(outputFile)) {
+    inputPath <- dirname(inputFile)
+    inputFileBase <- sub('\\..*$', '', basename(inputFile))
+    outputFile <- file.path(inputPath,
+                            paste0("PreppedData_", inputFileBase, ".txt"))
+  }
+
+
+  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # Read in Excel file exported by CyberTracker ----
+  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+
+  # Read Excel file
   x <- readxl::read_excel(path=inputFile, sheet=inputSheet)
+
+  # Check that expected column names exist
+  expectedNames <- c("Transect number",
+                     "Flight control",
+                     "Latitude",
+                     "Longitude",
+                     "Range")
+  for(i in expectedNames) {
+    if(!i %in% names(x)) {stop("This function requires the input file to have a column named '",
+                               i,
+                               "' but none exists.")}
+  }
+
 
   # Make some column names easier to work with
   names(x)[names(x) == "Transect number"] <- "siteID"
@@ -105,6 +169,8 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
   # Multiple columns were named "Cluster size" in input sheet
   # read_excel modifies the names with column index, but make more flexible
   # such that first one is cluster size, second is distance band.
+  # This is not a very robust way to handle this, but works on the example
+  # datasets provided by WGFD.
   clusterNames <- names(x)[grepl("Cluster size", names(x))]
   names(x)[names(x) == clusterNames[1]] <- "s"
   names(x)[names(x) == clusterNames[2]] <- "band"
@@ -142,7 +208,7 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Split data into sites and detections
+  # Split data into sites and detections ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Easier to handle data in two sets.
   # Sites data.frame will have one row for each transect surveyed
@@ -187,7 +253,7 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Calculate length of each transect
+  # Calculate length of each transect ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Use euclidean distance function to calculate length of transect (in km)
@@ -208,7 +274,7 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Impute missing flight heights
+  # Impute missing flight heights ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Mean AGL for all data (that have AGLs, before imputing)
   agl.all <- mean(ddf$agl, na.rm=TRUE)
@@ -329,7 +395,7 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Calculate adjusted distances based on bin midpoints and flight height
+  # Calculate adjusted distances based on bin midpoints and flight height ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   ddf$adjustedDist <- NA
@@ -347,7 +413,7 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Calculate adjusted distance and cutpoints based on flight height
+  # Calculate adjusted distance and cutpoints based on flight height ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Overall ratio of observed flight height to nominal flight height
@@ -361,13 +427,13 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Do some QAQC (check for extreme values)
+  # Do some QAQC (check for extreme values) ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # No checks implemented at this time
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Format to have format expected by DISTANCE
+  # Format to have format expected by DISTANCE ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Merge into what Program DISTANCE calls a "flat file"
@@ -403,7 +469,7 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Calculate study summaries to aid troubleshooting
+  # Calculate study summaries to aid troubleshooting ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
 
@@ -421,6 +487,9 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
 
   # Number of pronghorn detections after truncating at right-most cutpoint
   n.detects.ind.trunc <- sum(ddf$s[ddf$adjustedDist <= max(cuts)])
+
+  # # Mean group size (after truncation)
+  # mean.group <- mean(ddf$s[ddf$adjustedDist <= max(cuts)])
 
   # Total length of surveyed transects
   total.km <- sum(sdf$lengthKm)
@@ -445,7 +514,7 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Write out .txt file ready for DISTANCE import
+  # Write out .txt file ready for DISTANCE import ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Tab-delimited text file
@@ -456,12 +525,13 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
               row.names=FALSE)
 
   # Print location of output file
-  cat("The dataset formatted for analysis in Program DISTANCE was written to:\n", outputFile)
+  cat("The dataset formatted for analysis in Program DISTANCE was written to:\n",
+      outputFile)
 
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Print summary results
+  # Print summary results ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   cat("\n#%%%%%%%%%%#\n")
   cat("DATA SUMMARY")
@@ -472,10 +542,13 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
   cat("Number of transects with no detections: ", n.trans.no, "\n")
   cat("Total transect length surveyed (km): ", total.km, "\n")
   cat("Number of groups (clusters) detected: ", n.detects, "\n")
+
   cat("Assuming right-truncation at largest adjusted distance interval cutpoint, number of groups (clusters) in analysis: ", n.detects.trunc, "\n")
 
   cat("Number of individuals detected: ", n.detects.ind, "\n")
   cat("Assuming right-truncation at largest adjusted distance interval cutpoint, number of individuals in analysis: ", n.detects.ind.trunc, "\n")
+  # cat("Mean group size (number of individuals per group) after right-truncation: ", mean.group, "\n")
+
 
   cat("Number of groups (clusters) that had missing flight heights: ", n.NA, "\n")
   cat("Mean flight height (ft) at detections - before imputing missing flight heights: ", round(agl.all, 2), "\n")
@@ -487,7 +560,7 @@ prepDataForAnalysis <- function(inputFile, inputSheet, outputFile) {
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Write out separate .txt file reporting study summaries and QAQC report
+  # Write out separate .txt file reporting study summaries and QAQC report ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Not implemented at this time
 

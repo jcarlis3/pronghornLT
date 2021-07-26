@@ -4,18 +4,22 @@
 \alias{prepDataForAnalysis}
 \title{prepDataForAnalysis}
 \usage{
-prepDataForAnalysis(inputFile, inputSheet, outputFile)
+prepDataForAnalysis(inputFile = NULL, inputSheet = NULL, outputFile = NULL)
 }
 \arguments{
-\item{inputFile}{The path and name of the Excel file containing the input
-data.  The input data is the data output from CyberTracker.  Excel files with
-extension \code{.xls} or \code{.xlsx} are allowed.  Note the direction of
-slashes in the path needs to follow R expectations (use \code{/} instead of
-the Windows default of \code{\\}), that the file name and extension are included,
-and that the path needs to start and end with quotes.
+\item{inputFile}{The data output from CyberTracker to format for input to
+Program DISTANCE.  Excel files with extension \code{.xls} or \code{.xlsx} are
+allowed. If \code{inputFile = NULL} (the default), the user is
+prompted to select the input file interactively. Alternatively, the user can
+specify the path and name of the Excel file containing the input data.
+Note the direction of slashes in the path must follow R expectations
+(use \code{/} instead of the Windows default of \code{\\}),
+that the file name and extension must be included,
+and that the path must start and end with quotes.
 Example:  \code{"C:/Users/jcarlisle/Desktop/myInputFile.xlsx"}.
 This function expects the following columns (named as shown) in the
-\code{inputFile}.  The order of the columns does not matter, and
+\code{inputFile}.  The order of the columns does not matter (except in the
+case of the "Cluster size" columns, see below), and
 any additional columns are ignored:
 \describe{
  \item{Transect number}{Unique name of each transect.}
@@ -32,12 +36,26 @@ any additional columns are ignored:
 }}
 
 \item{inputSheet}{The sheet (or tab) within the above-specified Excel file
-that should be read in.  Specify as the name of the sheet (e.g., \code{"Sheet1"}
-or \code{"inputData"}) or as the numbered position of the sheet within the file
-(e.g., \code{1}).}
+that should be read in. If \code{inputSheet = NULL} (the default), the names
+of the sheets in the \code{inputFile} are printed to the console, and the user
+is prompted to select the sheet name interactively.  Alternatively,
+specify as the name of the sheet (e.g., \code{"Sheet1"} or \code{"inputData"})
+or as the numbered position of the sheet within the file (e.g., \code{1}).}
 
 \item{outputFile}{The path and name of the tab-delimited text file to write
 out containing the output data ready for import into Program DISTANCE.
+If \code{outputFile = NULL} (the default), the file will be written to the
+same directory as the \code{inputFile}, with \code{"PreppedData_"} prepended
+to the file name of the \code{inputFile}.  E.g, if
+\code{inputFile} is \code{"C:/Users/jcarlisle/Desktop/myInputFile.xlsx"} and
+\code{outputFile = NULL}, the output will be written to
+\code{"C:/Users/jcarlisle/Desktop/PreppedData_myInputFile.txt"}.
+Alternatively, the user can specify the path and name of the text file.
+Note the direction of slashes in the path must follow R expectations
+(use \code{/} instead of the Windows default of \code{\\}),
+that the file name and extension must be included,
+and that the path must start and end with quotes.
+#' Example:  \code{"C:/Users/jcarlisle/Desktop/myOutputFile.txt"}.
 The column names in the output file are standardized to use names similar to
 Program DISTANCE (making import less error-prone) and to clarify units:
 \describe{
@@ -82,7 +100,7 @@ The prepped data is written to file, and some summaries of the data are
 printed to the R console.
 }
 \examples{
-\donttest{
+\dontrun{
 # Read in Sheet1 of myInputFile.xlsx, and write out myOutputFile.txt
 prepDataForAnalysis(inputFile = "C:/Users/myUserName/Desktop/myInputFile.xlsx",
                     inputSheet = "Sheet1",
