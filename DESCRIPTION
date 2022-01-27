@@ -4,12 +4,12 @@ Title: Utilities to Prepare Pronghorn Line-transect Survey Data for Analysis
 Version: 1.2
 Date: 2021-07-26
 Authors@R: as.person(c(
-    "Jason D. Carlisle <jcarlisle@west-inc.com> [aut, cre]",
+    "Jason D. Carlisle <jason.carlisle@wyo.gov> [aut, cre]",
     "Trent McDonald <> [ctb]",
     "Lee Knox <> [ctb]",
     "Embere Hall <> [ctb]",
     "Tom Prebyl <> [ctb]"))
-Maintainer: Jason D. Carlisle <jcarlisle@west-inc.com>
+Maintainer: Jason D. Carlisle <jason.carlisle@wyo.gov>
 Description: Helper functions to automate the conversion of raw data into an
     analysis-ready format.
 URL: https://github.com/jcarlis3/pronghornLT
