@@ -88,8 +88,6 @@ following summaries in the R console:
 \item Mean flight height (ft) at detections - after imputing missing values
 \item Nominal distance interval cutpoints (m)
 \item Adjusted distance interval cutpoints (m)
-
-
 }
 }
 \description{

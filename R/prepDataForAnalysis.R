@@ -67,6 +67,7 @@
 #' containing the detected group, adjusted for the flight height at the time of
 #' detection.}
 #' }
+#'
 #' @return Writes a tab-delimited text file to \code{outputFile}.  This file is
 #' ready for import into Program DISTANCE.  Also prints the
 #' following summaries in the R console:
@@ -82,9 +83,8 @@
 #' \item Mean flight height (ft) at detections - after imputing missing values
 #' \item Nominal distance interval cutpoints (m)
 #' \item Adjusted distance interval cutpoints (m)
-#'
-#'
 #' }
+#'
 #' @author Jason Carlisle
 #' @references Guenzel, R.J. 2007. Procedures for Estimating Pronghorn Abundance
 #' in Wyoming Using Aerial Line Transect Sampling. Wyoming Game and Fish Department.
@@ -94,6 +94,7 @@
 #' @importFrom stats dist na.omit
 #' @importFrom utils menu write.table
 #' @export
+#'
 #' @examples
 #' \dontrun{
 #' # Read in Sheet1 of myInputFile.xlsx, and write out myOutputFile.txt
@@ -101,8 +102,6 @@
 #'                     inputSheet = "Sheet1",
 #'                     outputFile = "C:/Users/myUserName/Desktop/myOutputFile.txt")
 #' }
-
-
 
 
 prepDataForAnalysis <- function(inputFile = NULL,
