@@ -18,7 +18,7 @@ Description: Utilities to assist with aerial line-transect surveys for pronghorn
 URL: https://github.com/jcarlis3/pronghornLT
 BugReports: https://github.com/jcarlis3/pronghornLT/issues
 Depends: R (>= 3.6.0),
-    plyr,
+    dplyr,
     readxl,
     sf
 License: GPL-3
