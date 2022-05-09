@@ -85,12 +85,12 @@
 #' \item Adjusted distance interval cutpoints (m)
 #' }
 #'
-#' @author Jason D. Carlisle, \email{jcarlisle@@west-inc.com}
+#' @author Jason Carlisle
 #' @references Guenzel, R.J. 2007. Procedures for Estimating Pronghorn Abundance
 #' in Wyoming Using Aerial Line Transect Sampling. Wyoming Game and Fish Department.
 #' Cheyenne, WY, USA.
 #' @importFrom readxl excel_sheets read_excel
-#' @importFrom plyr ddply summarize
+#' @importFrom dplyr group_by summarize %>%
 #' @importFrom stats dist na.omit
 #' @importFrom utils menu write.table
 #' @export
@@ -279,12 +279,12 @@ prepDataForAnalysis <- function(inputFile = NULL,
   agl.all <- mean(ddf$agl, na.rm=TRUE)
 
   # Summary of AGL values (NA vs not) by transect
-  agl.site <- plyr::ddply(ddf, "siteID", plyr::summarize,
-                          n = length(agl),
-                          nNA = sum(is.na(agl)),
-                          # meanAgl = mean(agl, na.rm=TRUE),
-                          nGood = n - nNA,
-                          .drop=FALSE)
+  agl.site <- ddf %>%
+    dplyr::group_by(siteID, .drop=FALSE) %>%
+    dplyr::summarize(n = length(agl),
+                     nNA = sum(is.na(agl)),
+                     nGood = n - nNA)
+
 
 
   # Step through algorithm to impute missing flight heights:
