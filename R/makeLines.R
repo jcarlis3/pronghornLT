@@ -1,87 +1,92 @@
-
 #' makeLines
 #'
-#' @description This function optimizes the placement and spacing of 
-#' distance sampling transects for a given polygon area and desired total 
+#' @description This function optimizes the placement and spacing of
+#' line transects for a given polygon area and desired total
 #' transect length.
-#' 
-#' @param sPoly  The input polygon within which line transects will be generated.
-#' This must be a sf object and the coordinate system must us meters as the
-#' linear unit (e.g. EPSG=26913)
-#' @param xPoly  Optional input polygon that defines an exclusion area where
-#' line transects will not be generated. This must be a sf object.
-#' @param totalLengthKm Total length of transect to generate (in kilometers)
-#' @param angle The angle defining the orientation of the transect. 
-#' \code{angle = 90} corresponds to transects oriented in a North-South 
-#' direction (default)
-#' @param minLengthKm Minimum length required for an indiviudal transect line
-#'  (in kilometers)
-#' @param offset an offset to use when placing transects. By default the central
-#' transect is aligned with the center 
+#'
+#' @param sPoly  \code{sf} object, the input polygon within which line transects
+#'  will be generated. The coordinate system
+#'  must use meters as the linear unit (e.g. EPSG=26913)
+#' @param xPoly  \code{sf} object, optional input polygon that defines an
+#' exclusion area where line transects will not be generated.
+#' @param totalLengthKm Total length of transects to generate (in kilometers)
+#' @param angle Orientation of the transects. \code{angle = 0} produces
+#' transects oriented North-South (the default), \code{angle = 90} produces
+#' East-West transects.
+#' @param minLengthKm Minimum length required for an individual transect line
+#' (in kilometers)
+#' @param offset An offset to use when placing transects. By default the central
+#' transect is aligned with the center of the polygon.
 #' @param minSpace Optional minimal line spacing (in kilometers) to consider when
 #' optimizing transect placement (default is NULL).
 #' @param maxSpace Optional maximum line spacing (in kilometers) to consider when
 #' optimizing transect placement (default is NULL).
 #' @param optimTol Optional tolerance value indicating the maximum allowable
-#' deviation from \code{totalLengthKm} expressed as a proportion. (default is 0.01).
+#' deviation from \code{totalLengthKm} expressed as a proportion (default is 0.01).
 #' When the function fails to find a solution within the specified tolerance an
 #' error is returned.
 #' @param outFile Optional output filename for a saving a spatial layer containing
-#' the line transects. Typically, this will be a shapefile (e.g. "C:/Temp/myLines.shp")
-#' The file extenstion can be any accepted by \code{sf::st_write()}
+#' the line transects. Typically, this will be a shapefile
+#' (e.g. "C:/Temp/myLines.shp")
+#' The file extension can be any accepted by \code{sf::st_write()}
 #'
-#' @return Returns a list object containing the transect lines and 
+#' @return Returns a list object containing the transect lines and
 #' a summary dataframe:
 #' \describe{
-#'   \item{lines}{Simple feature collection of transect lines}
-#'   \item{summary}{Dataframe summary of transect lines}
+#'   \item{lines}{\code{sf} object, simple feature collection of transect lines}
+#'   \item{summary}{\code{data.frame} summary of transect lines}
 #' }
 #'
-#'
-#' }
-#' @author Thomas J. Prebyl and Jason D. Carlisle, \email{jason.carlisle@@wyo.gov }
+#' @author Tom Prebyl, minor contributions by Jason Carlisle
 #' @importFrom sf st_difference st_union st_coordinates st_sfc st_bbox st_crs st_length st_write st_linestring
 #' @import spatstat
+#' @import spatstat.geom
 #' @export
+#'
 #' @examples
 #' \dontrun{
 #' #Read in herd unit polygon
 #' hu <- sf::st_read("W:/My Drive/Projects/Pronghorn_ltds/herd_units/Rattlesnake_HU.shp")
-#' 
+#'
 #' # Make lines
 #' testLines <- makeLines(sPoly = hu,
 #'      xPoly = NULL,
 #'      totalLengthKm = 1000,
-#'      angle = 90,
+#'      angle = 0,
 #'      outFile = NULL,
 #'      minSpace = NULL,
 #'      maxSpace = NULL)
-#'      
+#'
 #' # View output summary
 #' print(testLines$summary)
-#' 
+#'
 #' # Plot output
 #' plot(hu["geometry"])
 #' plot(testLines$lines['lineID'], add = T, col = 'red')
 #' }
 
 
-makeLines <- function(sPoly, 
-              xPoly = NULL, 
+makeLines <- function(sPoly,
+              xPoly = NULL,
               totalLengthKm,
-              angle = 90,     # angle of lines, 90 = North-South, 0 = East-West
+              angle = 0,
               minLengthKm = 2.0,
               offset = 0,
               minSpace = NULL,
               maxSpace = NULL,
               optimTol = 0.01,
               outFile = NULL) {
-  
+
+  # Functions below interpret angle = 90 to be North-South and 0 East-West
+  # Convert so user inputs are more intuitive 0 = N-S, 90 = E-W
+  angle <- (angle*-1)-90
+
+
   # Convert km to m
   targLenM <- totalLengthKm*1000
   minLength <- minLengthKm*1000
 
-  # erase exclusion polygon
+  # Erase exclusion polygon
   if(!is.null(xPoly)) {
     xPoly <- sf::st_transform(xPoly, sf::st_crs(sPoly))
     diffPoly <- sf::st_difference(sf::st_union(sPoly),
@@ -90,26 +95,27 @@ makeLines <- function(sPoly,
   else {
     diffPoly <- sf::st_union(sPoly)
   }
-  
-  # convert polygon to spatstat window
-  polyCoord <- sf::st_coordinates(diffPoly)
-  polyWin <- spatstat.geom::owin(poly = list(x = rev(polyCoord[,1]),y = rev(polyCoord[,2])))
 
-  
+  # Convert polygon to spatstat window
+  polyCoord <- sf::st_coordinates(diffPoly)
+  polyWin <- spatstat.geom::owin(poly = list(x = rev(polyCoord[, 1]),
+                                             y = rev(polyCoord[, 2])))
+
+
   # Estimate approx line spacing (using area)
   totSqKM <- as.numeric(sf::st_area(sPoly)*1e-06)
   targKmPerSqKm <- totalLengthKm/totSqKM
-  approxSpace <- exp(-1*log(targKmPerSqKm))*1000 #approximate line spacing in m
-  
-  
-  # set spacing optimization bounds (if not supplied by user)
+  approxSpace <- exp(-1*log(targKmPerSqKm))*1000  # approximate line spacing (m)
+
+
+  # Set spacing optimization bounds (if not supplied by user)
   if(is.null(minSpace)) {
     minSpace <- approxSpace*0.75
   }
   if(is.null(maxSpace)) {
     maxSpace <- approxSpace*1.1
   }
-  
+
   optimSpace <- stats::optimize(
     f = evalLines,
     lower = minSpace,
@@ -121,8 +127,8 @@ makeLines <- function(sPoly,
     targLenM = targLenM,
     offset = offset
   )
-  
-  # if quick optim failed, try more intensive manual search
+
+  # If quick optim failed, try more intensive manual search
   if(optimSpace$objective > targLenM*optimTol) {
     op <- options("warn")
     on.exit(options(op))
@@ -139,17 +145,17 @@ makeLines <- function(sPoly,
       optimTol = optimTol
     )
   }
-  
-  
+
+
   if(optimSpace$objective > targLenM*optimTol) {
     stop(paste0("Optimization failed to generate lines with supplied parameters\n",
                 "Consider setting minSpace and maxSpace parameters\n",
                 "or increasing optimTol.",
                 "The best spacing found was: ", round(optimSpace$minimum/1000), "km\n"))
   }
-  
+
   # print(approxSpace / optimSpace$minimum)
-  
+
   # Make lines using the optimization results
   keepLines <- genLines(
     angle = angle,
@@ -157,19 +163,19 @@ makeLines <- function(sPoly,
     win = polyWin,
     offset = offset,
     minLength = minLength)
-  
+
   # Convert lines to sf object
   matLines <- as.matrix(keepLines)
   lines <- lapply(1:nrow(matLines), function(x) {
-    sf::st_linestring(matrix(matLines[x,],ncol=2, byrow = T))
+    sf::st_linestring(matrix(matLines[x,],ncol=2, byrow = TRUE))
   })
   sfLines <- sf::st_sfc(lines, crs = sf::st_crs(diffPoly))
-  
+
   # Add attributes
   sfLines <- sf::st_sf(sfLines)
   sfLines$lineID <- 1:nrow(sfLines)
   sfLines$lengthKM <- as.numeric(sf::st_length(sfLines)/1000)
-  
+
   # Make summary info
   outSumm <- list(
     nLines = nrow(sfLines),
@@ -177,12 +183,12 @@ makeLines <- function(sPoly,
     spacingKm = optimSpace$minimum/1000
     # approxRatio = optimSpace$minimum/approxSpace
     )
-  
-  # write shapefile
+
+  # Write shapefile
   if(!is.null(outFile)) {
     sf::st_write(sfLines, outFile)
   }
-  
+
   # Return sf object and summary
   print(outSumm)
   return(list(lines = sfLines, summary = outSumm))
@@ -196,7 +202,7 @@ genLines <- function (spacing,
                       win,
                       offset,
                       minLength,
-                      angle = 90) {
+                      angle = 0) {
   # TODO validate inputs
   win <- spatstat.geom::as.owin(win)
   width <- diff(win$xrange)
@@ -257,17 +263,17 @@ evalLines <- function(spacing, angle, win, targLenM, offset, minLength){
   # Identifies local minimums in spacing-error curve and iteratively searches
     # each minima for acceptable spacing solution. Explores different offsets
     # if necessary.
-manualOptim <- function(minSpace, maxSpace, 
-                        angle, win, targLenM, 
+manualOptim <- function(minSpace, maxSpace,
+                        angle, win, targLenM,
                         offset, minLength,
                         optimTol,
-                        roughIter = 50, 
+                        roughIter = 50,
                         fineIter = 150) {
-  
+
   # Initialize output
   optimMan <- list(objective = Inf,
                    minimum = mean(c(minSpace, maxSpace)))
-  
+
   # Run rough optimization
   tryOffs <- c(0, 500, 1000, 1500) #offsets to try if necessary
   minInd <- NA
@@ -279,7 +285,7 @@ manualOptim <- function(minSpace, maxSpace,
       fineIter = fineIter+100
     }
     while(any(c(is.na(minInd),
-                minInd==1, 
+                minInd==1,
                 minInd==roughIter))) {
       roughSpace <- seq(minSpace, maxSpace, length.out = roughIter)
       roughRes <- sapply(roughSpace, function(x) {
@@ -308,7 +314,7 @@ manualOptim <- function(minSpace, maxSpace,
     # plot(roughSpace, roughRes)
     # points(roughSpace[roughlocMins], roughRes[roughlocMins],
       # pch = 16, col = 'red')
-    
+
     # run fine optimization on each local minima
     fineOut <- do.call(rbind, lapply(roughlocMins, function(roughInd) {
       roughOptim <- roughSpace[roughInd]
@@ -316,7 +322,7 @@ manualOptim <- function(minSpace, maxSpace,
       # roughMax <- min(roughOptim*2, roughSpace[min(c(length(roughSpace),(roughInd+2)))])
       roughMin <- roughSpace[max(c(1,(roughInd-4)))]
       roughMax <- roughSpace[min(c(length(roughSpace),(roughInd+4)))]
-      
+
       # Run fine optimization
       fineSpace <- seq(roughMin, roughMax, length.out = fineIter)
       fineRes <- sapply(fineSpace, function(y) {
@@ -332,7 +338,7 @@ manualOptim <- function(minSpace, maxSpace,
                          objective = min(fineRes))
       return(tempOptim)
       }))
-    
+
     fineOut <- fineOut[which.min(fineOut[,2]),]
     fineOptim <- list(minimum = fineOut$minimum,
                        objective = fineOut$objective)
@@ -344,7 +350,7 @@ manualOptim <- function(minSpace, maxSpace,
     if(fineOptim$objective < optimMan$objective) {
       optimMan <- fineOptim
     }
-    
+
   } # end offset loop
   return(optimMan)
 }
@@ -357,7 +363,7 @@ localmin <- function (x, n.points = 2) {
   test = function(i, vet, n.points) {
     indices = c((i - n.points):(i - 1), (i + 1):(i + n.points))
     indices = indices[indices > 0 & indices < (length(vet))]
-    response = ((!any(vet[indices] <= vet[i])) & length(indices) == 
+    response = ((!any(vet[indices] <= vet[i])) & length(indices) ==
                   (n.points * 2))
     return(response)
   }
@@ -369,11 +375,9 @@ localmin <- function (x, n.points = 2) {
     out <- list(ind = which(candidates.indices),
                 vals = candidates)
     # return(min(candidates))
-    return(out) 
+    return(out)
   }
   else {
     return(NA)
   }
 }
-
-

@@ -8,7 +8,7 @@ makeLines(
   sPoly,
   xPoly = NULL,
   totalLengthKm,
-  angle = 90,
+  angle = 0,
   minLengthKm = 2,
   offset = 0,
   minSpace = NULL,
@@ -18,24 +18,24 @@ makeLines(
 )
 }
 \arguments{
-\item{sPoly}{The input polygon within which line transects will be generated.
-This must be a sf object and the coordinate system must us meters as the
-linear unit (e.g. EPSG=26913)}
+\item{sPoly}{\code{sf} object, the input polygon within which line transects
+will be generated. The coordinate system
+must use meters as the linear unit (e.g. EPSG=26913)}
 
-\item{xPoly}{Optional input polygon that defines an exclusion area where
-line transects will not be generated. This must be a sf object.}
+\item{xPoly}{\code{sf} object, optional input polygon that defines an
+exclusion area where line transects will not be generated.}
 
-\item{totalLengthKm}{Total length of transect to generate (in kilometers)}
+\item{totalLengthKm}{Total length of transects to generate (in kilometers)}
 
-\item{angle}{The angle defining the orientation of the transect. 
-\code{angle = 90} corresponds to transects oriented in a North-South 
-direction (default)}
+\item{angle}{Orientation of the transects. \code{angle = 0} produces
+transects oriented North-South (the default), \code{angle = 90} produces
+East-West transects.}
 
-\item{minLengthKm}{Minimum length required for an indiviudal transect line
+\item{minLengthKm}{Minimum length required for an individual transect line
 (in kilometers)}
 
-\item{offset}{an offset to use when placing transects. By default the central
-transect is aligned with the center}
+\item{offset}{An offset to use when placing transects. By default the central
+transect is aligned with the center of the polygon.}
 
 \item{minSpace}{Optional minimal line spacing (in kilometers) to consider when
 optimizing transect placement (default is NULL).}
@@ -44,20 +44,26 @@ optimizing transect placement (default is NULL).}
 optimizing transect placement (default is NULL).}
 
 \item{optimTol}{Optional tolerance value indicating the maximum allowable
-deviation from \code{totalLengthKm} expressed as a proportion. (default is 0.01).
+deviation from \code{totalLengthKm} expressed as a proportion (default is 0.01).
 When the function fails to find a solution within the specified tolerance an
 error is returned.}
 
 \item{outFile}{Optional output filename for a saving a spatial layer containing
-the line transects. Typically, this will be a shapefile (e.g. "C:/Temp/myLines.shp")
-The file extenstion can be any accepted by \code{sf::st_write()}}
+the line transects. Typically, this will be a shapefile
+(e.g. "C:/Temp/myLines.shp")
+The file extension can be any accepted by \code{sf::st_write()}}
 }
 \value{
-
+Returns a list object containing the transect lines and
+a summary dataframe:
+\describe{
+  \item{lines}{\code{sf} object, simple feature collection of transect lines}
+  \item{summary}{\code{data.frame} summary of transect lines}
+}
 }
 \description{
-This function optimizes the placement and spacing of 
-distance sampling transects for a given polygon area and desired total 
+This function optimizes the placement and spacing of
+line transects for a given polygon area and desired total
 transect length.
 }
 \examples{
@@ -69,11 +75,11 @@ hu <- sf::st_read("W:/My Drive/Projects/Pronghorn_ltds/herd_units/Rattlesnake_HU
 testLines <- makeLines(sPoly = hu,
      xPoly = NULL,
      totalLengthKm = 1000,
-     angle = 90,
+     angle = 0,
      outFile = NULL,
      minSpace = NULL,
      maxSpace = NULL)
-     
+
 # View output summary
 print(testLines$summary)
 
@@ -83,5 +89,5 @@ plot(testLines$lines['lineID'], add = T, col = 'red')
 }
 }
 \author{
-Thomas J. Prebyl and Jason D. Carlisle, \email{jason.carlisle@wyo.gov }
+Tom Prebyl, minor contributions by Jason Carlisle
 }
