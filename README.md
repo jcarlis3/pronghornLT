@@ -1,11 +1,10 @@
 # pronghornLT
 *Utilities to Prepare Pronghorn Line-transect Survey Data for Analysis*
 
-This simple package currently contains just one function (`prepDataForAnalysis`).  This function reads in raw data exported from CyberTracker software and prepares it for input to Program DISTANCE for a distance-sampling analysis. The prepped data is written to file, and some summaries of the data are printed to the R console.
-
-
 ## How to install
-To install and load `pronghornLT` in R, run the following code.  Note, the `remotes` package is needed to install `pronghornLT` directly from GitHub, and the first line will install the `remotes` package if you don't already have it.
+To install and load `pronghornLT` in R, run the following code.  Note, the 
+`remotes` package is needed to install `pronghornLT` directly from GitHub, and 
+the first line will install the `remotes` package if you don't already have it.
 
 ```
 # Check whether the remotes package is installed, if not, install it from CRAN
@@ -19,8 +18,14 @@ require(pronghornLT)
 ```
 
 ## How to use
-Run `?prepDataForAnalysis` in the R console to see the help document and directions for using the package's only function.
-Simply running the function with default inputs will prompt the user to specify the input file and sheet interactively, and write an output file to the same directory as the input file.
-```
-prepDataForAnalysis()
-```
+
+### Prep raw survey data for analysis
+See the documentation for the following functions:
+
+- `prepDataForAnalysis`
+
+### Create transect lines within a herd unit
+See the documentation for the following functions:
+
+- `calcLineLength`
+- `makeLines`
