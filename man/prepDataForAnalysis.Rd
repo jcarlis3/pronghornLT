@@ -113,5 +113,5 @@ in Wyoming Using Aerial Line Transect Sampling. Wyoming Game and Fish Department
 Cheyenne, WY, USA.
 }
 \author{
-Jason D. Carlisle, \email{jcarlisle@west-inc.com}
+Jason Carlisle
 }
