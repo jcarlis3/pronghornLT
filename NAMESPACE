@@ -3,6 +3,7 @@
 export(makeLines)
 export(prepDataForAnalysis)
 import(spatstat)
+import(spatstat.geom)
 importFrom(plyr,ddply)
 importFrom(plyr,summarize)
 importFrom(readxl,excel_sheets)
