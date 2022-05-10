@@ -29,6 +29,9 @@
 #' the line transects. Typically, this will be a shapefile
 #' (e.g. "C:/Temp/myLines.shp")
 #' The file extension can be any accepted by \code{sf::st_write()}
+#' @param overwrite If \code{outFile} is specified, and a file already exists
+#' with that name, should that existing file be overwritten by the new one?
+#' (default is TRUE)
 #'
 #' @return Returns a list object containing the transect lines and
 #' a summary dataframe:
@@ -75,7 +78,8 @@ makeLines <- function(sPoly,
               minSpace = NULL,
               maxSpace = NULL,
               optimTol = 0.01,
-              outFile = NULL) {
+              outFile = NULL,
+              overwrite = TRUE) {
 
   # Functions below interpret angle = 90 to be North-South and 0 East-West
   # Convert so user inputs are more intuitive 0 = N-S, 90 = E-W
@@ -186,7 +190,7 @@ makeLines <- function(sPoly,
 
   # Write shapefile
   if(!is.null(outFile)) {
-    sf::st_write(sfLines, outFile)
+    sf::st_write(sfLines, outFile, append = !overwrite)
   }
 
   # Return sf object and summary

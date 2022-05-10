@@ -14,7 +14,8 @@ makeLines(
   minSpace = NULL,
   maxSpace = NULL,
   optimTol = 0.01,
-  outFile = NULL
+  outFile = NULL,
+  overwrite = TRUE
 )
 }
 \arguments{
@@ -52,6 +53,10 @@ error is returned.}
 the line transects. Typically, this will be a shapefile
 (e.g. "C:/Temp/myLines.shp")
 The file extension can be any accepted by \code{sf::st_write()}}
+
+\item{overwrite}{If \code{outFile} is specified, and a file already exists
+with that name, should that existing file be overwritten by the new one?
+(default is TRUE)}
 }
 \value{
 Returns a list object containing the transect lines and
