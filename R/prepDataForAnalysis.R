@@ -67,6 +67,25 @@
 #' containing the detected group, adjusted for the flight height at the time of
 #' detection.}
 #' }
+#' @param shpCreate Logical, should a shapefile of the surveyed transects be
+#' written out?  The transects are reconstructed from the transect
+#' start and stop records in the input data.
+#' @param shpCRS Numeric, the EPSG code for the coordinate reference system
+#' (projection) of the coordinates in the input data.  Common projections for
+#' Wyoming:
+#' \itemize{
+#' \item 26912:  UTM NAD83 Zone 12N
+#' \item 26913:  UTM NAD83 Zone 13N
+#' }
+#' @param shpFile The path and name of the shapefile to write
+#' out containing the surveyed transects.
+#' If \code{shpFile = NULL} (the default), the file will be written to the
+#' same directory as the \code{inputFile}, with \code{"SurveyedTransects_"}
+#' prepended to the file name of the \code{inputFile}.  E.g, if
+#' \code{inputFile} is \code{"C:/Users/jcarlisle/Desktop/myInputFile.xlsx"} and
+#' \code{shpFile = NULL}, the output will be written to
+#' \code{"C:/Users/jcarlisle/Desktop/SurveyedTransects_myInputFile.shp"}.
+#' Alternatively, the user can specify the path and name of the shapefile.
 #'
 #' @return Writes a tab-delimited text file to \code{outputFile}.  This file is
 #' ready for import into Program DISTANCE.  Also prints the
@@ -90,23 +109,29 @@
 #' in Wyoming Using Aerial Line Transect Sampling. Wyoming Game and Fish Department.
 #' Cheyenne, WY, USA.
 #' @importFrom readxl excel_sheets read_excel
-#' @importFrom dplyr group_by summarize %>%
+#' @importFrom dplyr select group_by summarize %>%
 #' @importFrom stats dist na.omit
 #' @importFrom utils menu write.table
+#' @importFrom sf st_as_sf st_cast st_write
 #' @export
 #'
 #' @examples
 #' \dontrun{
 #' # Read in Sheet1 of myInputFile.xlsx, and write out myOutputFile.txt
+#' # Skip option to write out shapefile of transects as surveyed
 #' prepDataForAnalysis(inputFile = "C:/Users/myUserName/Desktop/myInputFile.xlsx",
 #'                     inputSheet = "Sheet1",
-#'                     outputFile = "C:/Users/myUserName/Desktop/myOutputFile.txt")
+#'                     outputFile = "C:/Users/myUserName/Desktop/myOutputFile.txt",
+#'                     shpCreate = FALSE)
 #' }
 
 
 prepDataForAnalysis <- function(inputFile = NULL,
                                 inputSheet = NULL,
-                                outputFile = NULL) {
+                                outputFile = NULL,
+                                shpCreate = TRUE,
+                                shpCRS = 26913,
+                                shpFile = NULL) {
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
@@ -136,6 +161,20 @@ prepDataForAnalysis <- function(inputFile = NULL,
     outputFile <- file.path(inputPath,
                             paste0("PreppedData_", inputFileBase, ".txt"))
   }
+
+
+  # Set shapefile output file path to same as input file path if none provided
+  # And default file name
+  if(shpCreate) {
+    if(is.null(shpFile)) {
+      inputPath <- dirname(inputFile)
+      inputFileBase <- sub('\\..*$', '', basename(inputFile))
+      shpFile <- file.path(inputPath,
+                           paste0("SurveyedTransects_", inputFileBase, ".shp"))
+    }
+
+  }
+
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
@@ -219,6 +258,12 @@ prepDataForAnalysis <- function(inputFile = NULL,
   sdf <- x[x$event %in% c("Start new transect", "End transect"),
            c("siteID", "event", "x", "y")]
 
+  # sdf currently has two rows for each transect surveyed (a row for each start
+  # and stop location), save that aside as tdf to build transect shp off of.
+  # sdf will be collapsed into traditional form with one row for each transect
+  # surveyed in the line length calculation below
+  tdf <- sdf
+
 
   # Check that all sites have start/end
   unique.sites <- unique(as.character(sdf$siteID))
@@ -269,6 +314,37 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
   }))
 
+
+
+  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # Create shapefile of transects as surveyed ----
+  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+
+  if(shpCreate) {
+
+    # Create end points
+    p <- sf::st_as_sf(x = tdf,
+                      coords = c("x", "y"),
+                      crs = shpCRS)
+
+    # Convert end points to lines
+    # I think the summarize step is needed, so added a dummy variable s that
+    # is then dropped
+    l <- p %>%
+      dplyr::group_by(siteID) %>%
+      dplyr::summarize(s = unique(siteID)) %>%
+      sf::st_cast("LINESTRING") %>%
+      dplyr::select(siteID, geometry)
+
+    # Check
+    # plot(sf::st_geometry(p))
+    # plot(sf::st_geometry(l), add=TRUE)
+
+
+    # Write shapefile of surveyed transects
+    sf::st_write(l, shpFile)
+
+  }
 
 
 

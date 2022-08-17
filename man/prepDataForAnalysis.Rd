@@ -4,7 +4,14 @@
 \alias{prepDataForAnalysis}
 \title{prepDataForAnalysis}
 \usage{
-prepDataForAnalysis(inputFile = NULL, inputSheet = NULL, outputFile = NULL)
+prepDataForAnalysis(
+  inputFile = NULL,
+  inputSheet = NULL,
+  outputFile = NULL,
+  shpCreate = TRUE,
+  shpCRS = 26913,
+  shpFile = NULL
+)
 }
 \arguments{
 \item{inputFile}{The data output from CyberTracker to format for input to
@@ -71,6 +78,28 @@ pronghorn group in meters. Based on the midpoint of the distance band
 containing the detected group, adjusted for the flight height at the time of
 detection.}
 }}
+
+\item{shpCreate}{Logical, should a shapefile of the surveyed transects be
+written out?  The transects are reconstructed from the transect
+start and stop records in the input data.}
+
+\item{shpCRS}{Numeric, the EPSG code for the coordinate reference system
+(projection) of the coordinates in the input data.  Common projections for
+Wyoming:
+\itemize{
+\item 26912:  UTM NAD83 Zone 12N
+\item 26913:  UTM NAD83 Zone 13N
+}}
+
+\item{shpFile}{The path and name of the shapefile to write
+out containing the surveyed transects.
+If \code{shpFile = NULL} (the default), the file will be written to the
+same directory as the \code{inputFile}, with \code{"SurveyedTransects_"}
+prepended to the file name of the \code{inputFile}.  E.g, if
+\code{inputFile} is \code{"C:/Users/jcarlisle/Desktop/myInputFile.xlsx"} and
+\code{shpFile = NULL}, the output will be written to
+\code{"C:/Users/jcarlisle/Desktop/SurveyedTransects_myInputFile.shp"}.
+Alternatively, the user can specify the path and name of the shapefile.}
 }
 \value{
 Writes a tab-delimited text file to \code{outputFile}.  This file is
@@ -100,9 +129,11 @@ printed to the R console.
 \examples{
 \dontrun{
 # Read in Sheet1 of myInputFile.xlsx, and write out myOutputFile.txt
+# Skip option to write out shapefile of transects as surveyed
 prepDataForAnalysis(inputFile = "C:/Users/myUserName/Desktop/myInputFile.xlsx",
                     inputSheet = "Sheet1",
-                    outputFile = "C:/Users/myUserName/Desktop/myOutputFile.txt")
+                    outputFile = "C:/Users/myUserName/Desktop/myOutputFile.txt",
+                    shpCreate = FALSE)
 }
 }
 \references{
