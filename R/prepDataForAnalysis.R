@@ -86,6 +86,16 @@
 #' \code{shpFile = NULL}, the output will be written to
 #' \code{"C:/Users/jcarlisle/Desktop/SurveyedTransects_myInputFile.shp"}.
 #' Alternatively, the user can specify the path and name of the shapefile.
+#' @param mapCreate Logical, should an interactive map of the surveyed transects and
+#' pronghorn observations be created and written to html file?
+#' @param mapFile The path and name of the html map to write
+#' out showing the surveyed transects and pronghorn observation locations.
+#' If \code{mapFile = NULL} (the default), the file will be written to the
+#' same directory as the \code{inputFile}, with \code{"Map_"}
+#' prepended to the file name of the \code{inputFile}.  E.g, if
+#' \code{inputFile} is \code{"C:/Users/jcarlisle/Desktop/myInputFile.xlsx"} and
+#' \code{mapFile = NULL}, the output will be written to
+#' \code{"C:/Users/jcarlisle/Desktop/Map_myInputFile.html"}.
 #'
 #' @return Writes a tab-delimited text file to \code{outputFile}.  This file is
 #' ready for import into Program DISTANCE.  Also prints the
@@ -113,6 +123,7 @@
 #' @importFrom stats dist na.omit
 #' @importFrom utils menu write.table
 #' @importFrom sf st_as_sf st_cast st_write
+#' @importFrom mapview mapview mapshot
 #' @export
 #'
 #' @examples
@@ -131,7 +142,9 @@ prepDataForAnalysis <- function(inputFile = NULL,
                                 outputFile = NULL,
                                 shpCreate = TRUE,
                                 shpCRS = 26913,
-                                shpFile = NULL) {
+                                shpFile = NULL,
+                                mapCreate = TRUE,
+                                mapFile = NULL) {
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
@@ -171,6 +184,19 @@ prepDataForAnalysis <- function(inputFile = NULL,
       inputFileBase <- sub('\\..*$', '', basename(inputFile))
       shpFile <- file.path(inputPath,
                            paste0("SurveyedTransects_", inputFileBase, ".shp"))
+    }
+
+  }
+
+
+  # Set shapefile output file path to same as input file path if none provided
+  # And default file name
+  if(mapCreate) {
+    if(is.null(mapFile)) {
+      inputPath <- dirname(inputFile)
+      inputFileBase <- sub('\\..*$', '', basename(inputFile))
+      mapFile <- file.path(inputPath,
+                           paste0("Map_", inputFileBase, ".html"))
     }
 
   }
@@ -320,29 +346,60 @@ prepDataForAnalysis <- function(inputFile = NULL,
   # Create shapefile of transects as surveyed ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
-  if(shpCreate) {
+  # Spatial data - transects
+  if(shpCreate | mapCreate) {
 
     # Create end points
-    p <- sf::st_as_sf(x = tdf,
+    e <- sf::st_as_sf(x = tdf,
                       coords = c("x", "y"),
                       crs = shpCRS)
 
     # Convert end points to lines
     # I think the summarize step is needed, so added a dummy variable s that
     # is then dropped
-    l <- p %>%
+    l <- e %>%
       dplyr::group_by(siteID) %>%
       dplyr::summarize(s = unique(siteID)) %>%
       sf::st_cast("LINESTRING") %>%
       dplyr::select(siteID, geometry)
 
     # Check
-    # plot(sf::st_geometry(p))
+    # plot(sf::st_geometry(e))
     # plot(sf::st_geometry(l), add=TRUE)
 
 
-    # Write shapefile of surveyed transects
-    sf::st_write(l, shpFile)
+    # (Over)write shapefile of surveyed transects
+    if(shpCreate) {
+      sf::st_write(l, shpFile, append=FALSE)
+    }
+
+
+  }
+
+  # Spatial data - detections
+  if(mapCreate) {
+    # Create points for pronghorn detections (where the plane was when detection
+    # was recorded)
+
+    # Create points
+    p <- sf::st_as_sf(x = ddf,
+                      coords = c("x", "y"),
+                      crs = shpCRS)
+
+  }
+
+
+  # Interactive map
+  if(mapCreate) {
+    m <- mapview::mapview(l, color="darkgrey", legend=FALSE) +
+      # mapview::mapview(e) +  # transect end points
+      mapview::mapview(p, legend=FALSE)  # color by group size
+
+    # Display map
+    # m
+
+    # Save map as interactive html
+    mapview::mapshot(m, url = mapFile)
 
   }
 

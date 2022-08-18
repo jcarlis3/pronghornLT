@@ -10,7 +10,9 @@ prepDataForAnalysis(
   outputFile = NULL,
   shpCreate = TRUE,
   shpCRS = 26913,
-  shpFile = NULL
+  shpFile = NULL,
+  mapCreate = TRUE,
+  mapFile = NULL
 )
 }
 \arguments{
@@ -100,6 +102,18 @@ prepended to the file name of the \code{inputFile}.  E.g, if
 \code{shpFile = NULL}, the output will be written to
 \code{"C:/Users/jcarlisle/Desktop/SurveyedTransects_myInputFile.shp"}.
 Alternatively, the user can specify the path and name of the shapefile.}
+
+\item{mapCreate}{Logical, should an interactive map of the surveyed transects and
+pronghorn observations be created and written to html file?}
+
+\item{mapFile}{The path and name of the html map to write
+out showing the surveyed transects and pronghorn observation locations.
+If \code{mapFile = NULL} (the default), the file will be written to the
+same directory as the \code{inputFile}, with \code{"Map_"}
+prepended to the file name of the \code{inputFile}.  E.g, if
+\code{inputFile} is \code{"C:/Users/jcarlisle/Desktop/myInputFile.xlsx"} and
+\code{mapFile = NULL}, the output will be written to
+\code{"C:/Users/jcarlisle/Desktop/Map_myInputFile.html"}.}
 }
 \value{
 Writes a tab-delimited text file to \code{outputFile}.  This file is
