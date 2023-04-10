@@ -152,23 +152,23 @@ prepDataForAnalysis <- function(inputFile = NULL,
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Allow the user to interactively select the input Excel file
-  if(is.null(inputFile)) {
+  if (is.null(inputFile)) {
     inputFile <- file.choose()
   }
 
 
   # Have the user select which sheet of the selected input Excel file to use
-  if(is.null(inputSheet)) {
+  if (is.null(inputSheet)) {
     sheetNames <- readxl::excel_sheets(inputFile)
     sheetIndex <- menu(sheetNames,
-                       title="Which sheet in the Excel file contains the input data?")
+                       title = "Which sheet in the Excel file contains the input data?")
     inputSheet <- sheetNames[sheetIndex]
   }
 
 
   # Set output file path to same as input file path if none provided
   # And default file name that prepends "PreppedData_" to the input filename
-  if(is.null(outputFile)) {
+  if (is.null(outputFile)) {
     inputPath <- dirname(inputFile)
     inputFileBase <- sub('\\..*$', '', basename(inputFile))
     outputFile <- file.path(inputPath,
@@ -178,8 +178,8 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
   # Set shapefile output file path to same as input file path if none provided
   # And default file name
-  if(shpCreate) {
-    if(is.null(shpFile)) {
+  if (shpCreate) {
+    if (is.null(shpFile)) {
       inputPath <- dirname(inputFile)
       inputFileBase <- sub('\\..*$', '', basename(inputFile))
       shpFile <- file.path(inputPath,
@@ -191,8 +191,8 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
   # Set shapefile output file path to same as input file path if none provided
   # And default file name
-  if(mapCreate) {
-    if(is.null(mapFile)) {
+  if (mapCreate) {
+    if (is.null(mapFile)) {
       inputPath <- dirname(inputFile)
       inputFileBase <- sub('\\..*$', '', basename(inputFile))
       mapFile <- file.path(inputPath,
@@ -208,7 +208,8 @@ prepDataForAnalysis <- function(inputFile = NULL,
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Read Excel file
-  x <- readxl::read_excel(path=inputFile, sheet=inputSheet)
+  x <- readxl::read_excel(path = inputFile,
+                          sheet = inputSheet)
 
   # Check that expected column names exist
   expectedNames <- c("Transect number",
@@ -216,8 +217,8 @@ prepDataForAnalysis <- function(inputFile = NULL,
                      "Latitude",
                      "Longitude",
                      "Range")
-  for(i in expectedNames) {
-    if(!i %in% names(x)) {stop("This function requires the input file to have a column named '",
+  for (i in expectedNames) {
+    if (!i %in% names(x)) {stop("This function requires the input file to have a column named '",
                                i,
                                "' but none exists.")}
   }
@@ -258,10 +259,10 @@ prepDataForAnalysis <- function(inputFile = NULL,
   # Populate rest of siteID column
   # Go row by row, copy down value in the previous row when an NA is encountered
   # The first value cannot be NA
-  if(!is.na(x$siteID[1])) {
-    for(i in 2:nrow(x)) {
-      if(is.na(x$siteID[i])){
-        x$siteID[i] <- x$siteID[i-1]
+  if (!is.na(x$siteID[1])) {
+    for (i in 2:nrow(x)) {
+      if (is.na(x$siteID[i])) {
+        x$siteID[i] <- x$siteID[i - 1]
       } else {
         next
       }
@@ -295,14 +296,14 @@ prepDataForAnalysis <- function(inputFile = NULL,
   unique.sites <- unique(as.character(sdf$siteID))
   fail.sites <- NULL
 
-  for(i in 1:length(unique.sites)) {
+  for (i in 1:length(unique.sites)) {
     nrow.start <- nrow(sdf[sdf$siteID == unique.sites[i] & sdf$event == "Start new transect", ])
     nrow.end <- nrow(sdf[sdf$siteID == unique.sites[i] & sdf$event == "End transect", ])
-    if(!(nrow.start == 1 & nrow.end == 1)) {
+    if (!(nrow.start == 1 & nrow.end == 1)) {
       fail.sites <- c(fail.sites, i)
     }
   }
-  if(!is.null(fail.sites)) {
+  if (!is.null(fail.sites)) {
     stop(cat("These transect numbers do not have one start record and one end record: ", fail.sites))
   }
 
@@ -328,10 +329,10 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
   # Use euclidean distance function to calculate length of transect (in km)
   # Assumes projected coordinated system (e.g., not decimal degrees of lat/lon)
-  sdf <- do.call(rbind, lapply(unique.sites, function (i) {
+  sdf <- do.call(rbind, lapply(unique.sites, function(i) {
     p <- sdf[sdf$siteID == i, ]
 
-    l <- as.numeric(dist(p[c("x", "y")], method="euclidean"))/1e3
+    l <- as.numeric(dist(p[c("x", "y")], method = "euclidean"))/1e3
 
     r <- data.frame(siteID = i,
                     lengthKm = l)
@@ -347,7 +348,7 @@ prepDataForAnalysis <- function(inputFile = NULL,
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Spatial data - transects
-  if(shpCreate | mapCreate) {
+  if (shpCreate | mapCreate) {
 
     # Create end points
     e <- sf::st_as_sf(x = tdf,
@@ -369,15 +370,15 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
     # (Over)write shapefile of surveyed transects
-    if(shpCreate) {
-      sf::st_write(l, shpFile, append=FALSE)
+    if (shpCreate) {
+      sf::st_write(l, shpFile, append = FALSE)
     }
 
 
   }
 
   # Spatial data - detections
-  if(mapCreate) {
+  if (mapCreate) {
     # Create points for pronghorn detections (where the plane was when detection
     # was recorded)
 
@@ -390,10 +391,10 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
   # Interactive map
-  if(mapCreate) {
-    m <- mapview::mapview(l, color="darkgrey", legend=FALSE) +
+  if (mapCreate) {
+    m <- mapview::mapview(l, color = "darkgrey", legend = FALSE) +
       # mapview::mapview(e) +  # transect end points
-      mapview::mapview(p, legend=FALSE)  # color by group size
+      mapview::mapview(p, legend = FALSE)  # color by group size
 
     # Display map
     # m
@@ -409,11 +410,11 @@ prepDataForAnalysis <- function(inputFile = NULL,
   # Impute missing flight heights ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Mean AGL for all data (that have AGLs, before imputing)
-  agl.all <- mean(ddf$agl, na.rm=TRUE)
+  agl.all <- mean(ddf$agl, na.rm = TRUE)
 
   # Summary of AGL values (NA vs not) by transect
   agl.site <- ddf %>%
-    dplyr::group_by(siteID, .drop=FALSE) %>%
+    dplyr::group_by(siteID, .drop = FALSE) %>%
     dplyr::summarize(n = length(agl),
                      nNA = sum(is.na(agl)),
                      nGood = n - nNA)
@@ -430,8 +431,8 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
   # First, add detection ID within each transect
-  ddf <- do.call(rbind, lapply(unique.sites, function (i) {
-    if(i %in% ddf$siteID) {
+  ddf <- do.call(rbind, lapply(unique.sites, function(i) {
+    if (i %in% ddf$siteID) {
       p <- ddf[ddf$siteID == i, ]
       p$id <- 1:nrow(p)
       return(p)
@@ -450,7 +451,7 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
     # Skip over transects where no detections were recorded
-    if(agl.site$n[agl.site$siteID == unique.sites[i]] == 0) {
+    if (agl.site$n[agl.site$siteID == unique.sites[i]] == 0) {
       return(NULL)
     }
 
@@ -461,19 +462,19 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
     # If all agls are valid (no NAs)
     # No need to impute anyting
-    if(sum(is.na(d$agl)) == 0) {
+    if (sum(is.na(d$agl)) == 0) {
       return(d)
     } else {
       # If all agls are NA
-      if(sum(!is.na(d$agl)) == 0) {
+      if (sum(!is.na(d$agl)) == 0) {
 
         # this site and those with usable agl values
         good.sites <- agl.site[(agl.site$nGood > 0 | agl.site$siteID == unique.sites[i]), ]
         good.sites$id <- 1:nrow(good.sites)  # numeric way to index sites, clunky
-        use.sites.id <- c(good.sites$id[good.sites$siteID == unique.sites[i]]-1,
-                          good.sites$id[good.sites$siteID == unique.sites[i]]+1)
+        use.sites.id <- c(good.sites$id[good.sites$siteID == unique.sites[i]] - 1,
+                          good.sites$id[good.sites$siteID == unique.sites[i]] + 1)
         use.sites <- as.character(good.sites$siteID[good.sites$id %in% use.sites.id])
-        d$agl <- mean(ddf$agl[ddf$siteID %in% use.sites], na.rm=TRUE)  # mean at two transects
+        d$agl <- mean(ddf$agl[ddf$siteID %in% use.sites], na.rm = TRUE)  # mean at two transects
 
         return(d)
 
@@ -484,23 +485,23 @@ prepDataForAnalysis <- function(inputFile = NULL,
         good.agls <- na.omit(d$agl)
 
         # NA in first detection
-        if(is.na(d$agl[1])) {
+        if (is.na(d$agl[1])) {
           d$agl[1] <- good.agls[1]
         }
 
         # NA in last detection
-        if(is.na(d$agl[nrow(d)])) {
+        if (is.na(d$agl[nrow(d)])) {
           d$agl[nrow(d)] <- good.agls[length(good.agls)]
         }
 
-        if(nrow(d) >= 3) {
+        if (nrow(d) >= 3) {
 
           # Helper indices (row numbers) of rows with NAs and without NAs in agl
           na.rows <-  which(is.na(d$agl))
           good.rows <- which(!is.na(d$agl))
 
-          for(j in na.rows){
-            pre.agl <- d$agl[j-1]  # previous agl (in order, so any NA should already be resolved)
+          for (j in na.rows) {
+            pre.agl <- d$agl[j - 1]  # previous agl (in order, so any NA should already be resolved)
             post.agl <- d$agl[min(good.rows[good.rows > j])]  # next good agl
 
             d$agl[j] <- mean(c(pre.agl, post.agl))
@@ -514,13 +515,13 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
   # Issue a warning if, for some reason, there are still NAs in the agl column
-  if(anyNA(ddf$agl)) {
+  if (anyNA(ddf$agl)) {
     warning("The flight height contains NA values even after attempting to replace the NAs.")
   }
 
 
   # Mean AGL for all data (after imputing)
-  agl.obs <- mean(ddf$agl, na.rm=TRUE)
+  agl.obs <- mean(ddf$agl, na.rm = TRUE)
 
   # Difference in mean AGL after imputing compared to before imputing
   agl.obs - agl.all
@@ -571,7 +572,7 @@ prepDataForAnalysis <- function(inputFile = NULL,
   # Merge into what Program DISTANCE calls a "flat file"
   # A row for each detection, that includes the transect length
   # Plus a row for each transect where nothing was detected (with NAs for most cols)
-  distData <- merge(sdf, ddf, all=TRUE)
+  distData <- merge(sdf, ddf, all = TRUE)
   distData$id <- NULL
 
 
@@ -651,10 +652,10 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
   # Tab-delimited text file
   write.table(distData,
-              file=outputFile,
-              sep="\t",
-              na="",  # Program DISTANCE needs blanks instead of NAs
-              row.names=FALSE)
+              file = outputFile,
+              sep = "\t",
+              na = "",  # Program DISTANCE needs blanks instead of NAs
+              row.names = FALSE)
 
   # Print location of output file
   cat("The dataset formatted for analysis in Program DISTANCE was written to:\n",
