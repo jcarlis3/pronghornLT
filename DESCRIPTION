@@ -10,7 +10,8 @@ Authors@R: c(
     person("Tom", "Prebyl", role="aut"),
     person("Trent", "McDonald", role="ctb"),
     person("Lee", "Knox", role="ctb"),
-    person("Embere", "Hall", role="ctb"))
+    person("Embere", "Hall", role="ctb"),
+    person("Garrett", "Catlin", role="ctb"))
 Maintainer: Jason D. Carlisle <jason.carlisle@wyo.gov>
 Description: Utilities to assist with aerial line-transect surveys for pronghorn
     in Wyoming.  Functions aid with study design, conversion of raw data to
@@ -20,7 +21,7 @@ BugReports: https://github.com/jcarlis3/pronghornLT/issues
 Depends: R (>= 3.6.0)
 Imports: dplyr,
     mapview,
-    Rdistance,
+    Rdistance (>= 2.2.0),
     readxl,
     sf,
     spatstat,

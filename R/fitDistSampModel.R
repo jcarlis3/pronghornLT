@@ -20,7 +20,8 @@
 #' is extrapolated to.  This is often the total area of the herd unit, but areas
 #' not occupiable by pronghorn (e.g., forested areas) should be excluded.
 #' @param bootIterations Number of bootstrap iterations to use to calculate
-#' confidence intervals.  See \code{Rdistance::abundEstim}.
+#' confidence intervals.  See \code{Rdistance::abundEstim}.  If 0, no bootstrap
+#' is run and no CIs are generated.
 #'
 #' @return An 'abundance estimate' object.  Same as returned by
 #' \code{Rdistance::abundEstim}.
@@ -75,7 +76,7 @@ fitDistSampModel <- function(ddf,
 
 
   # Set units (required by Rdistance beginning with version 2.2.0)
-  # Rdistance seems to work best if the distance column is named "dist"
+  # And Rdistance works best if the distance column is named "dist"
   wHi <- units::set_units(wHi, "m")
   ddf$dist <- units::set_units(ddf$adjustedDist, "m")
   ddf$adjustedDist <- NULL
@@ -85,19 +86,29 @@ fitDistSampModel <- function(ddf,
 
 
   # Fit detection function
-  dfunc <- Rdistance::dfuncEstim(formula = dist ~ 1,
+  # offset(s) is new Rdistance syntax for specifying group size column
+  # Specifying outputUnits = "mi" will provide density estimate in mi^2
+  dfunc <- Rdistance::dfuncEstim(formula = dist ~ 1 + offset(s),
                                  detectionData = ddf,
                                  likelihood = keyFun,
                                  expansions = 0,
                                  w.hi = wHi,
-                                 outputUnits = "m")
+                                 outputUnits = "mi")
 
 
   # Estimate abundance
+  # Turn off the bootstrap feature if bootIterations input is 0
+  if (bootIterations == 0) {
+    ci <- NULL  # Rdistance input to skip bootstrap and not calculate CIs
+  } else {
+    ci <- 0.95  # default 95% CI
+  }
+
   fit <- Rdistance::abundEstim(dfunc,
                                detectionData = ddf,
                                siteData = sdf,
                                area = areaMi2,
+                               ci = ci,
                                R = bootIterations,
                                plot.bs = FALSE,
                                showProgress = FALSE)
