@@ -39,7 +39,7 @@
 #'                                               "Data_PronghornLT_Rattlesnake_2022.xlsx"),
 #'                        inputSheet = 1,
 #'                        shpCreate = FALSE,
-#'                         mapCreate= FALSE)
+#'                         mapCreate = FALSE)
 #'
 #' # Fit distance-sampling model to estimate abundance
 #' # Key input data are the x$ddf and x$sdf data.frames from prepDataForAnalysis
