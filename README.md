@@ -1,5 +1,5 @@
 # pronghornLT
-*Utilities to Prepare Pronghorn Line-transect Survey Data for Analysis*
+*Utilities for Pronghorn Line-transect Surveys in Wyoming*
 
 ## How to install
 To install and load `pronghornLT` in R, run the following code.  Note, the 
