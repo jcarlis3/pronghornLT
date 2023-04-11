@@ -131,6 +131,10 @@ following summaries in the R console:
 \item Mean flight height (ft) at detections - after imputing missing values
 \item Nominal distance interval cutpoints (m)
 \item Adjusted distance interval cutpoints (m)
+
+Returns a list with the detection data (ddf) and sites data (sdf) ready for
+analysis in \code{Rdistance}, and a data.frame of key summaries (i.e., a
+subset of those printed).
 }
 }
 \description{
@@ -144,10 +148,25 @@ printed to the R console.
 \dontrun{
 # Read in Sheet1 of myInputFile.xlsx, and write out myOutputFile.txt
 # Skip option to write out shapefile of transects as surveyed
-prepDataForAnalysis(inputFile = "C:/Users/myUserName/Desktop/myInputFile.xlsx",
+# And skip option to write out interactive map
+x <- prepDataForAnalysis(inputFile = "C:/Users/myUserName/Desktop/myInputFile.xlsx",
                     inputSheet = "Sheet1",
                     outputFile = "C:/Users/myUserName/Desktop/myOutputFile.txt",
-                    shpCreate = FALSE)
+                    shpCreate = FALSE,
+                    mapCreate = FALSE)
+
+# A txt file of the data ready for analysis in Program DISTANCE was
+# written out.  If you need to access the underlying datasets in R, they're
+# stored too.
+
+# Detection data (one row per group detected)
+head(x$ddf)
+
+# Site data (one row per transect surveyed)
+head(x$sdf)
+
+# A subset of the summaries printed out
+x$sumTable
 }
 }
 \references{

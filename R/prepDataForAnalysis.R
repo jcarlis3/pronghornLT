@@ -112,6 +112,10 @@
 #' \item Mean flight height (ft) at detections - after imputing missing values
 #' \item Nominal distance interval cutpoints (m)
 #' \item Adjusted distance interval cutpoints (m)
+#'
+#' Returns a list with the detection data (ddf) and sites data (sdf) ready for
+#' analysis in \code{Rdistance}, and a data.frame of key summaries (i.e., a
+#' subset of those printed).
 #' }
 #'
 #' @author Jason Carlisle
@@ -130,10 +134,25 @@
 #' \dontrun{
 #' # Read in Sheet1 of myInputFile.xlsx, and write out myOutputFile.txt
 #' # Skip option to write out shapefile of transects as surveyed
-#' prepDataForAnalysis(inputFile = "C:/Users/myUserName/Desktop/myInputFile.xlsx",
+#' # And skip option to write out interactive map
+#' x <- prepDataForAnalysis(inputFile = "C:/Users/myUserName/Desktop/myInputFile.xlsx",
 #'                     inputSheet = "Sheet1",
 #'                     outputFile = "C:/Users/myUserName/Desktop/myOutputFile.txt",
-#'                     shpCreate = FALSE)
+#'                     shpCreate = FALSE,
+#'                     mapCreate = FALSE)
+#'
+#' # A txt file of the data ready for analysis in Program DISTANCE was
+#' # written out.  If you need to access the underlying datasets in R, they're
+#' # stored too.
+#'
+#' # Detection data (one row per group detected)
+#' head(x$ddf)
+#'
+#' # Site data (one row per transect surveyed)
+#' head(x$sdf)
+#'
+#' # A subset of the summaries printed out
+#' x$sumTable
 #' }
 
 
@@ -693,8 +712,31 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Write out separate .txt file reporting study summaries and QAQC report ----
+  # Return R objects needed to fit distance-sampling model in R (or shiny)
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Not implemented at this time
+
+  # Key summaries in format easier to display in shiny app
+  sumTable <- data.frame(Summary = c("Number of transects",
+                                     "Total transect length surveyed (km)",
+                                     "Total transect length surveyed (mi)",
+                                     "Number of groups detected (any distance)",
+                                     "Number of groups detected (within adjusted survey strip)",
+                                     "Number of individuals detected (any distance)",
+                                     "Number of individuals detected (within adjusted survey strip)",
+                                     "Mean flight height (ft) at detections after imputing missing flight heights") ,
+                         Value = c(n.trans,
+                                   total.km,
+                                   total.km * 0.621371,
+                                   n.detects,
+                                   n.detects.trunc,
+                                   n.detects.ind,
+                                   n.detects.ind.trunc,
+                                   agl.obs))
+
+
+  # Return prepped data objects and table of key summaries
+  return(list(ddf = ddf,
+              sdf = sdf,
+              sumTable = sumTable))
 
 }
