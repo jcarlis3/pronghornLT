@@ -18,14 +18,14 @@ require(pronghornLT)
 ```
 
 ## How to use
+See the documentation and examples for the following functions:
 
-### Prep raw survey data for analysis
-See the documentation for the following functions:
-
-- `prepDataForAnalysis`
-
-### Create transect lines within a herd unit
-See the documentation for the following functions:
-
+### Survey design - Create transect lines within a herd unit
 - `calcLineLength`
 - `makeLines`
+
+### Data prep and QAQC - Prep raw survey data for analysis and print QAQC summaries
+- `prepDataForAnalysis`
+
+### Analysis - Fit distance-sampling model to estimate abundance
+- `fitDistSampModel`
