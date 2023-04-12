@@ -87,13 +87,14 @@ fitDistSampModel <- function(ddf,
 
   # Fit detection function
   # offset(s) is new Rdistance syntax for specifying group size column
-  # Specifying outputUnits = "mi" will provide density estimate in mi^2
+  # Specifying outputUnits = "m" will provide distance measures in m
+  # and density estimate in mi^2 (we'll convert those to mi^2 in the app)
   dfunc <- Rdistance::dfuncEstim(formula = dist ~ 1 + offset(s),
                                  detectionData = ddf,
                                  likelihood = keyFun,
                                  expansions = 0,
                                  w.hi = wHi,
-                                 outputUnits = "mi")
+                                 outputUnits = "m")
 
 
   # Estimate abundance
