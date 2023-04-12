@@ -1,12 +1,10 @@
 #' prepDataForAnalysis
 #'
-#' @description This function reads in raw data exported from CyberTracker
-#' software and prepares it for input to Program DISTANCE for a
-#' distance-sampling analysis.
-#' The prepped data is written to file, and some summaries of the data are
-#' printed to the R console.
-#' @param inputFile  The data output from CyberTracker to format for input to
-#' Program DISTANCE.  Excel files with extension \code{.xls} or \code{.xlsx} are
+#' @description This function reads in raw survey data exported from
+#' CyberTracker software and prepares it for distance-sampling analysis in
+#' Program R or Program DISTANCE.
+#' @param inputFile  The survey data output from CyberTracker.  Excel files with
+#'  extension \code{.xls} or \code{.xlsx} are
 #' allowed. If \code{inputFile = NULL} (the default), the user is
 #' prompted to select the input file interactively. Alternatively, the user can
 #' specify the path and name of the Excel file containing the input data.
@@ -34,10 +32,60 @@
 #' }
 #' @param inputSheet  The sheet (or tab) within the above-specified Excel file
 #' that should be read in. If \code{inputSheet = NULL} (the default), the names
-#' of the sheets in the \code{inputFile} are printed to the console, and the user
-#' is prompted to select the sheet name interactively.  Alternatively,
+#' of the sheets in the \code{inputFile} are printed to the console, and the
+#' user is prompted to select the sheet name interactively.  Alternatively,
 #' specify as the name of the sheet (e.g., \code{"Sheet1"} or \code{"inputData"})
 #' or as the numbered position of the sheet within the file (e.g., \code{1}).
+
+#' @param shpCreate Logical, should a shapefile of the surveyed transects be
+#' written out?  The transects are reconstructed from the transect
+#' start and stop records in the input data.
+#' @param shpCRS Numeric, the EPSG code for the coordinate reference system
+#' (projection) of the coordinates in the input data.  Common projections for
+#' Wyoming:
+#' \itemize{
+#' \item 26912:  UTM NAD83 Zone 12N
+#' \item 26913:  UTM NAD83 Zone 13N
+#' }
+#'
+#' @return Returns a list with six elements:
+#' \describe{
+#'  \item{ddf}{x}
+#'  \item{sdf}{x}
+#'  \item{txt}{x}
+#'  \item{sumTable}{x}
+#'  \item{sfLines}{x}
+#'  \item{sfPoints}{x}
+#' }
+#'
+#'
+#' with the detection data (ddf) and sites data (sdf) ready for
+#' analysis in \code{Rdistance}, and a data.frame of key summaries (i.e., a
+#' subset of those printed).Writes a tab-delimited text file to \code{outputFile}.  This file is
+#' ready for import into Program DISTANCE.
+#'
+#'
+#' Also prints the
+#' following summaries in the R console:
+#' \itemize{
+#' \item Number of transects.
+#' \item Total transect length surveyed (km).
+#' \item Number of groups (clusters) detected.
+#' \item Assuming right-truncation at largest adjusted distance interval cutpoint, number of groups (clusters) in analysis.
+#' \item Number of individuals detected.
+#' \item Assuming right-truncation at largest adjusted distance interval cutpoint, number of individuals in analysis.
+#' \item Number of groups (clusters) that had missing flight heights
+#' \item Mean flight height (ft) at detections - before imputing missing values
+#' \item Mean flight height (ft) at detections - after imputing missing values
+#' \item Nominal distance interval cutpoints (m)
+#' \item Adjusted distance interval cutpoints (m)
+#'
+
+
+
+
+
+
 #' @param outputFile The path and name of the tab-delimited text file to write
 #' out containing the output data ready for import into Program DISTANCE.
 #' If \code{outputFile = NULL} (the default), the file will be written to the
@@ -67,55 +115,9 @@
 #' containing the detected group, adjusted for the flight height at the time of
 #' detection.}
 #' }
-#' @param shpCreate Logical, should a shapefile of the surveyed transects be
-#' written out?  The transects are reconstructed from the transect
-#' start and stop records in the input data.
-#' @param shpCRS Numeric, the EPSG code for the coordinate reference system
-#' (projection) of the coordinates in the input data.  Common projections for
-#' Wyoming:
-#' \itemize{
-#' \item 26912:  UTM NAD83 Zone 12N
-#' \item 26913:  UTM NAD83 Zone 13N
-#' }
-#' @param shpFile The path and name of the shapefile to write
-#' out containing the surveyed transects.
-#' If \code{shpFile = NULL} (the default), the file will be written to the
-#' same directory as the \code{inputFile}, with \code{"SurveyedTransects_"}
-#' prepended to the file name of the \code{inputFile}.  E.g, if
-#' \code{inputFile} is \code{"C:/Users/jcarlisle/Desktop/myInputFile.xlsx"} and
-#' \code{shpFile = NULL}, the output will be written to
-#' \code{"C:/Users/jcarlisle/Desktop/SurveyedTransects_myInputFile.shp"}.
-#' Alternatively, the user can specify the path and name of the shapefile.
-#' @param mapCreate Logical, should an interactive map of the surveyed transects and
-#' pronghorn observations be created and written to html file?
-#' @param mapFile The path and name of the html map to write
-#' out showing the surveyed transects and pronghorn observation locations.
-#' If \code{mapFile = NULL} (the default), the file will be written to the
-#' same directory as the \code{inputFile}, with \code{"Map_"}
-#' prepended to the file name of the \code{inputFile}.  E.g, if
-#' \code{inputFile} is \code{"C:/Users/jcarlisle/Desktop/myInputFile.xlsx"} and
-#' \code{mapFile = NULL}, the output will be written to
-#' \code{"C:/Users/jcarlisle/Desktop/Map_myInputFile.html"}.
-#'
-#' @return Writes a tab-delimited text file to \code{outputFile}.  This file is
-#' ready for import into Program DISTANCE.  Also prints the
-#' following summaries in the R console:
-#' \itemize{
-#' \item Number of transects.
-#' \item Total transect length surveyed (km).
-#' \item Number of groups (clusters) detected.
-#' \item Assuming right-truncation at largest adjusted distance interval cutpoint, number of groups (clusters) in analysis.
-#' \item Number of individuals detected.
-#' \item Assuming right-truncation at largest adjusted distance interval cutpoint, number of individuals in analysis.
-#' \item Number of groups (clusters) that had missing flight heights
-#' \item Mean flight height (ft) at detections - before imputing missing values
-#' \item Mean flight height (ft) at detections - after imputing missing values
-#' \item Nominal distance interval cutpoints (m)
-#' \item Adjusted distance interval cutpoints (m)
-#'
-#' Returns a list with the detection data (ddf) and sites data (sdf) ready for
-#' analysis in \code{Rdistance}, and a data.frame of key summaries (i.e., a
-#' subset of those printed).
+
+
+
 #' }
 #'
 #' @author Jason Carlisle
@@ -125,25 +127,15 @@
 #' @importFrom readxl excel_sheets read_excel
 #' @importFrom dplyr select group_by summarize %>%
 #' @importFrom stats dist na.omit
-#' @importFrom utils menu write.table
-#' @importFrom sf st_as_sf st_cast st_write
-#' @importFrom mapview mapview mapshot
+#' @importFrom utils menu
+#' @importFrom sf st_as_sf st_cast
 #' @export
 #'
 #' @examples
 #' \dontrun{
-#' # Read in Sheet1 of myInputFile.xlsx, and write out myOutputFile.txt
-#' # Skip option to write out shapefile of transects as surveyed
-#' # And skip option to write out interactive map
+#' # Read in Sheet1 of myInputFile.xlsx
 #' x <- prepDataForAnalysis(inputFile = "C:/Users/myUserName/Desktop/myInputFile.xlsx",
-#'                     inputSheet = "Sheet1",
-#'                     outputFile = "C:/Users/myUserName/Desktop/myOutputFile.txt",
-#'                     shpCreate = FALSE,
-#'                     mapCreate = FALSE)
-#'
-#' # A txt file of the data ready for analysis in Program DISTANCE was
-#' # written out.  If you need to access the underlying datasets in R, they're
-#' # stored too.
+#'                     inputSheet = "Sheet1")
 #'
 #' # Detection data (one row per group detected)
 #' head(x$ddf)
@@ -151,21 +143,29 @@
 #' # Site data (one row per transect surveyed)
 #' head(x$sdf)
 #'
-#' # A subset of the summaries printed out
+#' # Both detection and site data (flat file) ready for import to Program DISTANCE
+#' head(x$txt)
+#'
+#' # Summaries of the data (to aid QAQC)
 #' x$sumTable
+#'
+#' # Map of transects as flown
+#' plot(sf::st_geometry(x$sfLines))
+#'
+#' # Map of pronghorn detection locations (plane location)
+#' plot(sf::st_geometry(x$sfPoints))
+#'
+#' # Interactive map of both lines and points
+#' # Points are sized based on group size
+#' mapview::mapview(x$sfLines, color = "blue", legend = FALSE) +
+#'   mapview::mapview(x$sfPoints, cex = "s", label = "s")
+#'
 #' }
 
 
 prepDataForAnalysis <- function(inputFile = NULL,
                                 inputSheet = NULL,
-                                outputFile = NULL,
-                                shpCreate = TRUE,
-                                shpCRS = 26913,
-                                shpFile = NULL,
-                                mapCreate = TRUE,
-                                mapFile = NULL) {
-
-
+                                shpCRS = 26913) {
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # File paths ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
@@ -185,50 +185,19 @@ prepDataForAnalysis <- function(inputFile = NULL,
   }
 
 
-  # Set output file path to same as input file path if none provided
-  # And default file name that prepends "PreppedData_" to the input filename
-  if (is.null(outputFile)) {
-    inputPath <- dirname(inputFile)
-    inputFileBase <- sub('\\..*$', '', basename(inputFile))
-    outputFile <- file.path(inputPath,
-                            paste0("PreppedData_", inputFileBase, ".txt"))
-  }
-
-
-  # Set shapefile output file path to same as input file path if none provided
-  # And default file name
-  if (shpCreate) {
-    if (is.null(shpFile)) {
-      inputPath <- dirname(inputFile)
-      inputFileBase <- sub('\\..*$', '', basename(inputFile))
-      shpFile <- file.path(inputPath,
-                           paste0("SurveyedTransects_", inputFileBase, ".shp"))
-    }
-
-  }
-
-
-  # Set shapefile output file path to same as input file path if none provided
-  # And default file name
-  if (mapCreate) {
-    if (is.null(mapFile)) {
-      inputPath <- dirname(inputFile)
-      inputFileBase <- sub('\\..*$', '', basename(inputFile))
-      mapFile <- file.path(inputPath,
-                           paste0("Map_", inputFileBase, ".html"))
-    }
-
-  }
-
-
-
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Read in Excel file exported by CyberTracker ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Read Excel file
+  # The .name_repair argument suppresses the following message caused by
+  # duplicated column names in the CyberTracker output
+  # New names:
+  # • `Cluster size` -> `Cluster size...13`
+  # • `Cluster size` -> `Cluster size...16`
   x <- readxl::read_excel(path = inputFile,
-                          sheet = inputSheet)
+                          sheet = inputSheet,
+                          .name_repair = "unique_quiet")
 
   # Check that expected column names exist
   expectedNames <- c("Transect number",
@@ -237,9 +206,13 @@ prepDataForAnalysis <- function(inputFile = NULL,
                      "Longitude",
                      "Range")
   for (i in expectedNames) {
-    if (!i %in% names(x)) {stop("This function requires the input file to have a column named '",
-                               i,
-                               "' but none exists.")}
+    if (!i %in% names(x)) {
+      stop(
+        "This function requires the input file to have a column named '",
+        i,
+        "' but none exists."
+      )
+    }
   }
 
 
@@ -259,17 +232,23 @@ prepDataForAnalysis <- function(inputFile = NULL,
   names(x)[names(x) == clusterNames[1]] <- "s"
   names(x)[names(x) == clusterNames[2]] <- "band"
 
+
+  # Fix odd text formatting from CyberTracker which added "; Cluster size" into
+  # the band column
+  x$band <- gsub("; Cluster size", "", x$band)
+
+
   # Keep only needed columns
   x <- x[c("siteID", "event", "x", "y", "agl", "s", "band")]
 
 
   # Drop the "End survey" event
-  x <- x[x$event != "End survey", ]
+  x <- x[x$event != "End survey",]
 
   # Drop any rows with NA in event
   # An example dataset from Lee for Centennial included a row with date and
   # time, but all other rows were NAs
-  x <- x[!is.na(x$event), ]
+  x <- x[!is.na(x$event),]
 
 
   # Make siteID a factor (might come in as numeric or character)
@@ -316,29 +295,35 @@ prepDataForAnalysis <- function(inputFile = NULL,
   fail.sites <- NULL
 
   for (i in 1:length(unique.sites)) {
-    nrow.start <- nrow(sdf[sdf$siteID == unique.sites[i] & sdf$event == "Start new transect", ])
-    nrow.end <- nrow(sdf[sdf$siteID == unique.sites[i] & sdf$event == "End transect", ])
+    nrow.start <-
+      nrow(sdf[sdf$siteID == unique.sites[i] &
+                 sdf$event == "Start new transect",])
+    nrow.end <-
+      nrow(sdf[sdf$siteID == unique.sites[i] &
+                 sdf$event == "End transect",])
     if (!(nrow.start == 1 & nrow.end == 1)) {
       fail.sites <- c(fail.sites, i)
     }
   }
   if (!is.null(fail.sites)) {
-    stop(cat("These transect numbers do not have one start record and one end record: ", fail.sites))
+    stop(
+      cat(
+        "These transect numbers do not have one start record and one end record: ",
+        fail.sites
+      )
+    )
   }
-
-  # Remove extra objects
-  rm(fail.sites, nrow.end, nrow.start)
-
 
 
 
   # Detections data.frame
-  ddf <- x[x$event == "Record sighting", names(x[names(x) != "event"])]
+  ddf <-
+    x[x$event == "Record sighting", names(x[names(x) != "event"])]
 
-  # Note that the desired behavior here is for ddf$siteID to contain empty levels
-  # if there were transects where no pronghorn were detected
-  length(unique(ddf$siteID))
-  length(levels(ddf$siteID))  # will be greater if any transects had no pronghorn detected
+  # # Note that the desired behavior here is for ddf$siteID to contain empty levels
+  # # if there were transects where no pronghorn were detected
+  # length(unique(ddf$siteID))
+  # length(levels(ddf$siteID))  # will be greater if any transects had no pronghorn detected
 
 
 
@@ -349,9 +334,9 @@ prepDataForAnalysis <- function(inputFile = NULL,
   # Use euclidean distance function to calculate length of transect (in km)
   # Assumes projected coordinated system (e.g., not decimal degrees of lat/lon)
   sdf <- do.call(rbind, lapply(unique.sites, function(i) {
-    p <- sdf[sdf$siteID == i, ]
+    p <- sdf[sdf$siteID == i,]
 
-    l <- as.numeric(dist(p[c("x", "y")], method = "euclidean"))/1e3
+    l <- as.numeric(dist(p[c("x", "y")], method = "euclidean")) / 1e3
 
     r <- data.frame(siteID = i,
                     lengthKm = l)
@@ -363,65 +348,38 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Create shapefile of transects as surveyed ----
+  # Create sf object of transects as surveyed ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Spatial data - transects
-  if (shpCreate | mapCreate) {
+  # Create end points
+  e <- sf::st_as_sf(x = tdf,
+                    coords = c("x", "y"),
+                    crs = shpCRS)
 
-    # Create end points
-    e <- sf::st_as_sf(x = tdf,
-                      coords = c("x", "y"),
-                      crs = shpCRS)
+  # Convert end points to lines
+  # I think the summarize step is needed, so added a dummy variable s that
+  # is then dropped
+  l <- e %>%
+    dplyr::group_by(siteID) %>%
+    dplyr::summarize(s = unique(siteID)) %>%
+    sf::st_cast("LINESTRING") %>%
+    dplyr::select(siteID, geometry)
 
-    # Convert end points to lines
-    # I think the summarize step is needed, so added a dummy variable s that
-    # is then dropped
-    l <- e %>%
-      dplyr::group_by(siteID) %>%
-      dplyr::summarize(s = unique(siteID)) %>%
-      sf::st_cast("LINESTRING") %>%
-      dplyr::select(siteID, geometry)
-
-    # Check
-    # plot(sf::st_geometry(e))
-    # plot(sf::st_geometry(l), add=TRUE)
+  # Check
+  # plot(sf::st_geometry(e))
+  # plot(sf::st_geometry(l), add=TRUE)
 
 
-    # (Over)write shapefile of surveyed transects
-    if (shpCreate) {
-      sf::st_write(l, shpFile, append = FALSE)
-    }
-
-
-  }
 
   # Spatial data - detections
-  if (mapCreate) {
-    # Create points for pronghorn detections (where the plane was when detection
-    # was recorded)
+  # Create points for pronghorn detections (where the plane was when detection
+  # was recorded)
 
-    # Create points
-    p <- sf::st_as_sf(x = ddf,
-                      coords = c("x", "y"),
-                      crs = shpCRS)
-
-  }
-
-
-  # Interactive map
-  if (mapCreate) {
-    m <- mapview::mapview(l, color = "darkgrey", legend = FALSE) +
-      # mapview::mapview(e) +  # transect end points
-      mapview::mapview(p, legend = FALSE)  # color by group size
-
-    # Display map
-    # m
-
-    # Save map as interactive html
-    mapview::mapshot(m, url = mapFile)
-
-  }
+  # Create points
+  p <- sf::st_as_sf(x = ddf,
+                    coords = c("x", "y"),
+                    crs = shpCRS)
 
 
 
@@ -452,7 +410,7 @@ prepDataForAnalysis <- function(inputFile = NULL,
   # First, add detection ID within each transect
   ddf <- do.call(rbind, lapply(unique.sites, function(i) {
     if (i %in% ddf$siteID) {
-      p <- ddf[ddf$siteID == i, ]
+      p <- ddf[ddf$siteID == i,]
       p$id <- 1:nrow(p)
       return(p)
     } else {
@@ -467,8 +425,6 @@ prepDataForAnalysis <- function(inputFile = NULL,
   # Inner loop through detections
 
   ddf <- do.call(rbind, lapply(1:length(unique.sites), function(i) {
-
-
     # Skip over transects where no detections were recorded
     if (agl.site$n[agl.site$siteID == unique.sites[i]] == 0) {
       return(NULL)
@@ -476,7 +432,7 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
     # Detections for the transect of interest
-    d <- ddf[ddf$siteID == unique.sites[i], ]
+    d <- ddf[ddf$siteID == unique.sites[i],]
 
 
     # If all agls are valid (no NAs)
@@ -486,20 +442,24 @@ prepDataForAnalysis <- function(inputFile = NULL,
     } else {
       # If all agls are NA
       if (sum(!is.na(d$agl)) == 0) {
-
         # this site and those with usable agl values
-        good.sites <- agl.site[(agl.site$nGood > 0 | agl.site$siteID == unique.sites[i]), ]
-        good.sites$id <- 1:nrow(good.sites)  # numeric way to index sites, clunky
-        use.sites.id <- c(good.sites$id[good.sites$siteID == unique.sites[i]] - 1,
-                          good.sites$id[good.sites$siteID == unique.sites[i]] + 1)
-        use.sites <- as.character(good.sites$siteID[good.sites$id %in% use.sites.id])
-        d$agl <- mean(ddf$agl[ddf$siteID %in% use.sites], na.rm = TRUE)  # mean at two transects
+        good.sites <-
+          agl.site[(agl.site$nGood > 0 |
+                      agl.site$siteID == unique.sites[i]),]
+        good.sites$id <-
+          1:nrow(good.sites)  # numeric way to index sites, clunky
+        use.sites.id <-
+          c(good.sites$id[good.sites$siteID == unique.sites[i]] - 1,
+            good.sites$id[good.sites$siteID == unique.sites[i]] + 1)
+        use.sites <-
+          as.character(good.sites$siteID[good.sites$id %in% use.sites.id])
+        d$agl <-
+          mean(ddf$agl[ddf$siteID %in% use.sites], na.rm = TRUE)  # mean at two transects
 
         return(d)
 
 
       } else {
-
         # Cases with some NAs (but not all) in agl
         good.agls <- na.omit(d$agl)
 
@@ -514,14 +474,15 @@ prepDataForAnalysis <- function(inputFile = NULL,
         }
 
         if (nrow(d) >= 3) {
-
           # Helper indices (row numbers) of rows with NAs and without NAs in agl
           na.rows <-  which(is.na(d$agl))
           good.rows <- which(!is.na(d$agl))
 
           for (j in na.rows) {
-            pre.agl <- d$agl[j - 1]  # previous agl (in order, so any NA should already be resolved)
-            post.agl <- d$agl[min(good.rows[good.rows > j])]  # next good agl
+            pre.agl <-
+              d$agl[j - 1]  # previous agl (in order, so any NA should already be resolved)
+            post.agl <-
+              d$agl[min(good.rows[good.rows > j])]  # next good agl
 
             d$agl[j] <- mean(c(pre.agl, post.agl))
 
@@ -546,46 +507,49 @@ prepDataForAnalysis <- function(inputFile = NULL,
   agl.obs - agl.all
 
 
+
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Calculate adjusted distances based on bin midpoints and flight height ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
-  ddf$adjustedDist <- NA
-
-  # Insert nominal distance for band midpoint
-  ddf$adjustedDist[grepl("Alpha", ddf$band)] <- 10
-  ddf$adjustedDist[grepl("Bravo", ddf$band)] <- 32.5
-  ddf$adjustedDist[grepl("Charlie", ddf$band)] <- 62.5
-  ddf$adjustedDist[grepl("Delta", ddf$band)] <- 112.5
-  ddf$adjustedDist[grepl("Echo", ddf$band)] <- 172.5
-
-  # Adjust based on ratio of observed flight height to nominal flight height
-  # for each detection
-  ddf$adjustedDist <- ddf$adjustedDist * (ddf$agl / 300)
-
-
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Calculate adjusted distance and cutpoints based on flight height ----
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-
-  # Overall ratio of observed flight height to nominal flight height
-  agl.ratio <- agl.obs / 300
+  # Nominal flight height (ft)
+  agl.target <- 300
 
   # Nominal right cut points of each distance band
   cuts <- c(0, 20, 45, 80, 145, 200)
 
+  # Midpoint distance of each nominal band
+  cutMids <- cuts[-length(cuts)] + diff(cuts) / 2
+
+
+  # Insert nominal distance for band midpoint
+  ddf$adjustedDist <- NA
+  ddf$adjustedDist[grepl("Alpha", ddf$band)] <-   cutMids[1]
+  ddf$adjustedDist[grepl("Bravo", ddf$band)] <-   cutMids[2]
+  ddf$adjustedDist[grepl("Charlie", ddf$band)] <- cutMids[3]
+  ddf$adjustedDist[grepl("Delta", ddf$band)] <-   cutMids[4]
+  ddf$adjustedDist[grepl("Echo", ddf$band)] <-    cutMids[5]
+
+  # Adjust based on ratio of observed flight height to nominal flight height
+  # for each detection
+  ddf$adjustedDist <- ddf$adjustedDist * (ddf$agl / agl.target)
+
+
+
+  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # Calculate adjusted distance band cutpoints based on flight height ----
+  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+
+  # Overall ratio of observed flight height to nominal flight height
+  agl.ratio <- agl.obs / agl.target
+
   # Adjust based on overall ratio of flight heights
-  cuts <- cuts * agl.ratio
+  cutsNew <- cuts * agl.ratio
 
-
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Do some QAQC (check for extreme values) ----
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # No checks implemented at this time
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Format to have format expected by DISTANCE ----
+  # Format for .txt file ready for DISTANCE import ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Merge into what Program DISTANCE calls a "flat file"
@@ -606,11 +570,6 @@ prepDataForAnalysis <- function(inputFile = NULL,
   names(distData)[names(distData) == "adjustedDist"] <- "adjustedDistM"
 
 
-  # Fix odd text formatting from CyberTracker which added "; Cluster size" into
-  # the band column
-  distData$distBand <- gsub("; Cluster size", "", distData$distBand)
-
-
   # Do some rounding to make text files easier to work with
   # (when aligning columns in DISTANCE)
   distData$lineLengthKm <- round(distData$lineLengthKm, 3)
@@ -620,10 +579,10 @@ prepDataForAnalysis <- function(inputFile = NULL,
   distData$adjustedDistM <- round(distData$adjustedDistM, 2)
 
 
+
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Calculate study summaries to aid troubleshooting ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-
 
   # Number of transects
   n.trans <- length(unique(sdf$siteID))
@@ -635,13 +594,16 @@ prepDataForAnalysis <- function(inputFile = NULL,
   n.detects.ind <- sum(ddf$s)
 
   # Number of detections after truncating at right-most cutpoint
-  n.detects.trunc <- sum(ddf$adjustedDist <= max(cuts))
+  n.detects.trunc <- sum(ddf$adjustedDist <= max(cutsNew))
 
   # Number of pronghorn detections after truncating at right-most cutpoint
-  n.detects.ind.trunc <- sum(ddf$s[ddf$adjustedDist <= max(cuts)])
+  n.detects.ind.trunc <- sum(ddf$s[ddf$adjustedDist <= max(cutsNew)])
 
-  # # Mean group size (after truncation)
-  # mean.group <- mean(ddf$s[ddf$adjustedDist <= max(cuts)])
+  # Mean group size (after truncation)
+  mean.group <- mean(ddf$s[ddf$adjustedDist <= max(cutsNew)])
+
+  # Max group size (after truncation)
+  max.group <- max(ddf$s[ddf$adjustedDist <= max(cutsNew)])
 
   # Total length of surveyed transects
   total.km <- sum(sdf$lengthKm)
@@ -655,8 +617,6 @@ prepDataForAnalysis <- function(inputFile = NULL,
   # Mean AGL after imputing
   agl.obs
 
-
-
   # Total rows in output file
   n.rows <- nrow(distData)
 
@@ -666,77 +626,58 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Write out .txt file ready for DISTANCE import ----
+  # Create table of key data summaries ---
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
-  # Tab-delimited text file
-  write.table(distData,
-              file = outputFile,
-              sep = "\t",
-              na = "",  # Program DISTANCE needs blanks instead of NAs
-              row.names = FALSE)
-
-  # Print location of output file
-  cat("The dataset formatted for analysis in Program DISTANCE was written to:\n",
-      outputFile)
-
-
-
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Print summary results ----
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  cat("\n#%%%%%%%%%%#\n")
-  cat("DATA SUMMARY")
-  cat("\n#%%%%%%%%%%#\n")
-
-  cat("Total number of rows (excluding column names) to import to DISTANCE: ", n.rows, "\n")
-  cat("Number of transects: ", n.trans, "\n")
-  cat("Number of transects with no detections: ", n.trans.no, "\n")
-  cat("Total transect length surveyed (km): ", total.km, "\n")
-  cat("Number of groups (clusters) detected: ", n.detects, "\n")
-
-  cat("Assuming right-truncation at largest adjusted distance interval cutpoint, number of groups (clusters) in analysis: ", n.detects.trunc, "\n")
-
-  cat("Number of individuals detected: ", n.detects.ind, "\n")
-  cat("Assuming right-truncation at largest adjusted distance interval cutpoint, number of individuals in analysis: ", n.detects.ind.trunc, "\n")
-  # cat("Mean group size (number of individuals per group) after right-truncation: ", mean.group, "\n")
-
-
-  cat("Number of groups (clusters) that had missing flight heights: ", n.NA, "\n")
-  cat("Mean flight height (ft) at detections - before imputing missing flight heights: ", round(agl.all, 2), "\n")
-  cat("Mean flight height (ft) at detections - after imputing missing flight heights: ", round(agl.obs, 2), "\n")
-
-  cat("Nominal distance interval cutpoints (m): ", c(0, 20, 45, 80, 145, 200), "\n")
-  cat("Adjusted distance interval cutpoints (m): ", round(cuts, 2), "\n")
-
+  # Key summaries in data.frame format easier to display in shiny app
+  sumTable <- data.frame(
+    Summary = c(
+      "Number of transects",
+      "Number of transects with pronghorn detected",
+      "Number of transects without pronghorn detected",
+      "Total transect length surveyed (km)",
+      "Total transect length surveyed (mi)",
+      "Number of groups detected (any distance)",
+      "Number of groups detected (within adjusted survey strip)",
+      "Number of individuals detected (any distance)",
+      "Number of individuals detected (within adjusted survey strip)",
+      "Mean group size (within adjusted survey strip)",
+      "Maximum group size (within adjusted survey strip)",
+      "Number of groups missing flight height",
+      "Mean flight height (ft) at detections after imputing missing values",
+      "Ratio of actual/nominal flight height to adjust bin cutpoints"
+    ) ,
+    Value = c(
+      n.trans,
+      n.trans - n.trans.no,
+      n.trans.no,
+      total.km,
+      total.km * 0.621371,
+      n.detects,
+      n.detects.trunc,
+      n.detects.ind,
+      n.detects.ind.trunc,
+      mean.group,
+      max.group,
+      n.NA,
+      agl.obs,
+      agl.obs / agl.target
+    )
+  )
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Return R objects needed to fit distance-sampling model in R (or shiny)
+  # Return list of R objects (nothing written to file) ---
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-
-  # Key summaries in format easier to display in shiny app
-  sumTable <- data.frame(Summary = c("Number of transects",
-                                     "Total transect length surveyed (km)",
-                                     "Total transect length surveyed (mi)",
-                                     "Number of groups detected (any distance)",
-                                     "Number of groups detected (within adjusted survey strip)",
-                                     "Number of individuals detected (any distance)",
-                                     "Number of individuals detected (within adjusted survey strip)",
-                                     "Mean flight height (ft) at detections after imputing missing flight heights") ,
-                         Value = c(n.trans,
-                                   total.km,
-                                   total.km * 0.621371,
-                                   n.detects,
-                                   n.detects.trunc,
-                                   n.detects.ind,
-                                   n.detects.ind.trunc,
-                                   agl.obs))
-
 
   # Return prepped data objects and table of key summaries
-  return(list(ddf = ddf,
-              sdf = sdf,
-              sumTable = sumTable))
+  return(list(
+    ddf = ddf,
+    sdf = sdf,
+    txt = distData,
+    sumTable = sumTable,
+    sfLines = l,
+    sfPoints = p
+  ))
 
 }
