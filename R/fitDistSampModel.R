@@ -1,9 +1,8 @@
 #' Fit distance-sampling model to pronghorn line-transect data
 #'
 #' Estimate abundance of pronghorn using distance sampling.
-#' Distance sampling models are fit using Rdistance, and this code
-#' is compatible with Rdistance version 2.2.0.
-#' This is a thin wrapper of \code{Rdistance::dfuncEstim} and
+#' Distance-sampling models are fit using the Rdistance package.
+#' This is a thin wrapper around \code{Rdistance::dfuncEstim} and
 #' \code{Rdistance::abundEstim}.
 #'
 #' @param ddf Detection data.  See \code{Rdistance::dfuncEstim} and
@@ -20,8 +19,8 @@
 #' is extrapolated to.  This is often the total area of the herd unit, but areas
 #' not occupiable by pronghorn (e.g., forested areas) should be excluded.
 #' @param bootIterations Number of bootstrap iterations to use to calculate
-#' confidence intervals.  See \code{Rdistance::abundEstim}.  If 0, no bootstrap
-#' is run and no CIs are generated.
+#' confidence intervals.  See \code{Rdistance::abundEstim}.  If 0 (the default),
+#' no bootstrap is run and no CIs are generated.
 #'
 #' @return An 'abundance estimate' object.  Same as returned by
 #' \code{Rdistance::abundEstim}.
@@ -61,7 +60,7 @@ fitDistSampModel <- function(ddf,
                              wHi = 200,
                              sidesSurveyed = 1,
                              areaMi2,
-                             bootIterations) {
+                             bootIterations = 0) {
 
   # Set seed to make bootstrapping results reproducible
   set.seed(82070)

@@ -11,7 +11,7 @@ fitDistSampModel(
   wHi = 200,
   sidesSurveyed = 1,
   areaMi2,
-  bootIterations
+  bootIterations = 0
 )
 }
 \arguments{
@@ -35,7 +35,8 @@ is extrapolated to.  This is often the total area of the herd unit, but areas
 not occupiable by pronghorn (e.g., forested areas) should be excluded.}
 
 \item{bootIterations}{Number of bootstrap iterations to use to calculate
-confidence intervals.  See \code{Rdistance::abundEstim}.}
+confidence intervals.  See \code{Rdistance::abundEstim}.  If 0 (the default),
+no bootstrap is run and no CIs are generated.}
 }
 \value{
 An 'abundance estimate' object.  Same as returned by
@@ -43,9 +44,8 @@ An 'abundance estimate' object.  Same as returned by
 }
 \description{
 Estimate abundance of pronghorn using distance sampling.
-Distance sampling models are fit using Rdistance, and this code
-is compatible with Rdistance version 2.2.0.
-This is a thin wrapper of \code{Rdistance::dfuncEstim} and
+Distance-sampling models are fit using the Rdistance package.
+This is a thin wrapper around \code{Rdistance::dfuncEstim} and
 \code{Rdistance::abundEstim}.
 }
 \examples{
@@ -56,7 +56,7 @@ x <- prepDataForAnalysis(inputFile = file.path(dataPath,
                                               "Data_PronghornLT_Rattlesnake_2022.xlsx"),
                        inputSheet = 1,
                        shpCreate = FALSE,
-                        mapCreate= FALSE)
+                        mapCreate = FALSE)
 
 # Fit distance-sampling model to estimate abundance
 # Key input data are the x$ddf and x$sdf data.frames from prepDataForAnalysis
