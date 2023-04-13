@@ -1,8 +1,9 @@
 #' prepDataForAnalysis
 #'
-#' @description This function reads in raw survey data exported from
-#' CyberTracker software and prepares it for distance-sampling analysis in
-#' Program R or Program DISTANCE.
+#' @description This function reads in raw survey data collected during
+#' aerial line transect surveys for pronghorn (exported directly from
+#' CyberTracker data-collection software) and prepares it for distance-sampling
+#' analysis in Program R or Program DISTANCE.
 #' @param inputFile  The survey data output from CyberTracker.  Excel files with
 #'  extension \code{.xls} or \code{.xlsx} are
 #' allowed. If \code{inputFile = NULL} (the default), the user is
@@ -36,99 +37,65 @@
 #' user is prompted to select the sheet name interactively.  Alternatively,
 #' specify as the name of the sheet (e.g., \code{"Sheet1"} or \code{"inputData"})
 #' or as the numbered position of the sheet within the file (e.g., \code{1}).
-
-#' @param shpCreate Logical, should a shapefile of the surveyed transects be
-#' written out?  The transects are reconstructed from the transect
-#' start and stop records in the input data.
 #' @param shpCRS Numeric, the EPSG code for the coordinate reference system
 #' (projection) of the coordinates in the input data.  Common projections for
 #' Wyoming:
 #' \itemize{
 #' \item 26912:  UTM NAD83 Zone 12N
-#' \item 26913:  UTM NAD83 Zone 13N
+#' \item 26913:  UTM NAD83 Zone 13N (default)
 #' }
 #'
 #' @return Returns a list with six elements:
 #' \describe{
-#'  \item{ddf}{x}
-#'  \item{sdf}{x}
-#'  \item{txt}{x}
-#'  \item{sumTable}{x}
-#'  \item{sfLines}{x}
-#'  \item{sfPoints}{x}
+#'  \item{ddf}{A data.frame of detection data.  One row for each group of
+#'    pronghorn detected.  See the \code{detectionData} argument of
+#'    \code{Rdistance::dfuncEstim} and \code{Rdistance::abundEstim}.}
+#'  \item{sdf}{A data.frame of site data.  One row for each site (transect)
+#'    surveyed.  See the \code{siteData} argument of
+#'    \code{Rdistance::dfuncEstim} and \code{Rdistance::abundEstim}.}
+#'  \item{txt}{A data.frame in the "flat file" format expected by Program
+#'    DISTANCE.  Ready to be written to a tab-delimited text file which can be
+#'    imported into Program DISTANCE.  The column names are
+#'    standardized to use names similar to Program DISTANCE (making import less
+#'    error-prone) and to clarify units:
+#'    \describe{
+#'    \item{lineLabel}{Unique name of each transect.}
+#'    \item{lineLengthKm}{Length of each transect in kilometers.}
+#'    \item{coordsX}{X coordinate from GPS.}
+#'    \item{coordsY}{Y coordinate from GPS.}
+#'    \item{flightHeightFt}{Height of airplane (AGL) in feet.}
+#'    \item{clusterSize}{Number of pronghorn in detected group.}
+#'    \item{distBand}{Distance band the pronghorn were detected in.}
+#'    \item{adjustedDistM}{Estimated distance from transect to the detected
+#'    pronghorn group in meters. Based on the midpoint of the distance band
+#'    containing the detected group, adjusted for the flight height at the time
+#'    of detection.}
+#'    }}
+#'  \item{sumTable}{A data.frame of summaries of the input dataset, meant to aid
+#'    in QAQC and troubleshooting.}
+#'  \item{sfLines}{An sf object of the transect lines as surveyed.
+#'    The transects are reconstructed from the transect start and stop records
+#'    in the input data.
+#'    See the \code{shpCRS} argument to specify a coordinate reference system.}
+#'  \item{sfPoints}{An sf object of the detection points.  The points are
+#'    created from the sighting records in the input data.  Note, these
+#'    locations represent the location of the plane when a pronghorn
+#'    group was detected, not the location of the pronghorn group itself.
+#'    See the \code{shpCRS} argument to specify a coordinate reference system.}
 #' }
 #'
-#'
-#' with the detection data (ddf) and sites data (sdf) ready for
-#' analysis in \code{Rdistance}, and a data.frame of key summaries (i.e., a
-#' subset of those printed).Writes a tab-delimited text file to \code{outputFile}.  This file is
-#' ready for import into Program DISTANCE.
-#'
-#'
-#' Also prints the
-#' following summaries in the R console:
-#' \itemize{
-#' \item Number of transects.
-#' \item Total transect length surveyed (km).
-#' \item Number of groups (clusters) detected.
-#' \item Assuming right-truncation at largest adjusted distance interval cutpoint, number of groups (clusters) in analysis.
-#' \item Number of individuals detected.
-#' \item Assuming right-truncation at largest adjusted distance interval cutpoint, number of individuals in analysis.
-#' \item Number of groups (clusters) that had missing flight heights
-#' \item Mean flight height (ft) at detections - before imputing missing values
-#' \item Mean flight height (ft) at detections - after imputing missing values
-#' \item Nominal distance interval cutpoints (m)
-#' \item Adjusted distance interval cutpoints (m)
-#'
-
-
-
-
-
-
-#' @param outputFile The path and name of the tab-delimited text file to write
-#' out containing the output data ready for import into Program DISTANCE.
-#' If \code{outputFile = NULL} (the default), the file will be written to the
-#' same directory as the \code{inputFile}, with \code{"PreppedData_"} prepended
-#' to the file name of the \code{inputFile}.  E.g, if
-#' \code{inputFile} is \code{"C:/Users/jcarlisle/Desktop/myInputFile.xlsx"} and
-#' \code{outputFile = NULL}, the output will be written to
-#' \code{"C:/Users/jcarlisle/Desktop/PreppedData_myInputFile.txt"}.
-#' Alternatively, the user can specify the path and name of the text file.
-#' Note the direction of slashes in the path must follow R expectations
-#' (use \code{/} instead of the Windows default of \code{\\}),
-#' that the file name and extension must be included,
-#' and that the path must start and end with quotes.
-#' #' Example:  \code{"C:/Users/jcarlisle/Desktop/myOutputFile.txt"}.
-#' The column names in the output file are standardized to use names similar to
-#' Program DISTANCE (making import less error-prone) and to clarify units:
-#' \describe{
-#' \item{lineLabel}{Unique name of each transect.}
-#' \item{lineLengthKm}{Length of each transect in kilometers.}
-#' \item{coordsX}{X coordinate from GPS.}
-#' \item{coordsY}{Y coordinate from GPS.}
-#' \item{flightHeightFt}{Height of airplane (AGL) in feet.}
-#' \item{clusterSize}{Number of pronghorn in detected group.}
-#' \item{distBand}{Distance band the pronghorn were detected in.}
-#' \item{adjustedDistM}{Estimated distance from transect to the detected
-#' pronghorn group in meters. Based on the midpoint of the distance band
-#' containing the detected group, adjusted for the flight height at the time of
-#' detection.}
-#' }
-
-
-
-#' }
 #'
 #' @author Jason Carlisle
 #' @references Guenzel, R.J. 2007. Procedures for Estimating Pronghorn Abundance
 #' in Wyoming Using Aerial Line Transect Sampling. Wyoming Game and Fish Department.
 #' Cheyenne, WY, USA.
-#' @importFrom readxl excel_sheets read_excel
+
 #' @importFrom dplyr select group_by summarize %>%
+#' @importFrom readxl excel_sheets read_excel
+#' @importFrom rlang .data
+#' @importFrom sf st_as_sf st_cast
 #' @importFrom stats dist na.omit
 #' @importFrom utils menu
-#' @importFrom sf st_as_sf st_cast
 #' @export
 #'
 #' @examples
@@ -159,7 +126,6 @@
 #' # Points are sized based on group size
 #' mapview::mapview(x$sfLines, color = "blue", legend = FALSE) +
 #'   mapview::mapview(x$sfPoints, cex = "s", label = "s")
-#'
 #' }
 
 
@@ -361,10 +327,10 @@ prepDataForAnalysis <- function(inputFile = NULL,
   # I think the summarize step is needed, so added a dummy variable s that
   # is then dropped
   l <- e %>%
-    dplyr::group_by(siteID) %>%
-    dplyr::summarize(s = unique(siteID)) %>%
+    dplyr::group_by(.data$siteID) %>%
+    dplyr::summarize(s = unique(.data$siteID)) %>%
     sf::st_cast("LINESTRING") %>%
-    dplyr::select(siteID, geometry)
+    dplyr::select(.data$siteID, .data$geometry)
 
   # Check
   # plot(sf::st_geometry(e))
@@ -391,10 +357,10 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
   # Summary of AGL values (NA vs not) by transect
   agl.site <- ddf %>%
-    dplyr::group_by(siteID, .drop = FALSE) %>%
-    dplyr::summarize(n = length(agl),
-                     nNA = sum(is.na(agl)),
-                     nGood = n - nNA)
+    dplyr::group_by(.data$siteID, .drop = FALSE) %>%
+    dplyr::summarize(n = length(.data$agl),
+                     nNA = sum(is.na(.data$agl)),
+                     nGood = .data$n - .data$nNA)
 
 
 
@@ -626,7 +592,7 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Create table of key data summaries ---
+  # Create table of key data summaries ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Key summaries in data.frame format easier to display in shiny app
@@ -667,7 +633,7 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
-  # Return list of R objects (nothing written to file) ---
+  # Return list of R objects (nothing written to file) ----
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Return prepped data objects and table of key summaries

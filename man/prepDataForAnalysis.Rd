@@ -4,20 +4,11 @@
 \alias{prepDataForAnalysis}
 \title{prepDataForAnalysis}
 \usage{
-prepDataForAnalysis(
-  inputFile = NULL,
-  inputSheet = NULL,
-  outputFile = NULL,
-  shpCreate = TRUE,
-  shpCRS = 26913,
-  shpFile = NULL,
-  mapCreate = TRUE,
-  mapFile = NULL
-)
+prepDataForAnalysis(inputFile = NULL, inputSheet = NULL, shpCRS = 26913)
 }
 \arguments{
-\item{inputFile}{The data output from CyberTracker to format for input to
-Program DISTANCE.  Excel files with extension \code{.xls} or \code{.xlsx} are
+\item{inputFile}{The survey data output from CyberTracker.  Excel files with
+ extension \code{.xls} or \code{.xlsx} are
 allowed. If \code{inputFile = NULL} (the default), the user is
 prompted to select the input file interactively. Alternatively, the user can
 specify the path and name of the Excel file containing the input data.
@@ -46,118 +37,69 @@ any additional columns are ignored:
 
 \item{inputSheet}{The sheet (or tab) within the above-specified Excel file
 that should be read in. If \code{inputSheet = NULL} (the default), the names
-of the sheets in the \code{inputFile} are printed to the console, and the user
-is prompted to select the sheet name interactively.  Alternatively,
+of the sheets in the \code{inputFile} are printed to the console, and the
+user is prompted to select the sheet name interactively.  Alternatively,
 specify as the name of the sheet (e.g., \code{"Sheet1"} or \code{"inputData"})
 or as the numbered position of the sheet within the file (e.g., \code{1}).}
-
-\item{outputFile}{The path and name of the tab-delimited text file to write
-out containing the output data ready for import into Program DISTANCE.
-If \code{outputFile = NULL} (the default), the file will be written to the
-same directory as the \code{inputFile}, with \code{"PreppedData_"} prepended
-to the file name of the \code{inputFile}.  E.g, if
-\code{inputFile} is \code{"C:/Users/jcarlisle/Desktop/myInputFile.xlsx"} and
-\code{outputFile = NULL}, the output will be written to
-\code{"C:/Users/jcarlisle/Desktop/PreppedData_myInputFile.txt"}.
-Alternatively, the user can specify the path and name of the text file.
-Note the direction of slashes in the path must follow R expectations
-(use \code{/} instead of the Windows default of \code{\\}),
-that the file name and extension must be included,
-and that the path must start and end with quotes.
-#' Example:  \code{"C:/Users/jcarlisle/Desktop/myOutputFile.txt"}.
-The column names in the output file are standardized to use names similar to
-Program DISTANCE (making import less error-prone) and to clarify units:
-\describe{
-\item{lineLabel}{Unique name of each transect.}
-\item{lineLengthKm}{Length of each transect in kilometers.}
-\item{coordsX}{X coordinate from GPS.}
-\item{coordsY}{Y coordinate from GPS.}
-\item{flightHeightFt}{Height of airplane (AGL) in feet.}
-\item{clusterSize}{Number of pronghorn in detected group.}
-\item{distBand}{Distance band the pronghorn were detected in.}
-\item{adjustedDistM}{Estimated distance from transect to the detected
-pronghorn group in meters. Based on the midpoint of the distance band
-containing the detected group, adjusted for the flight height at the time of
-detection.}
-}}
-
-\item{shpCreate}{Logical, should a shapefile of the surveyed transects be
-written out?  The transects are reconstructed from the transect
-start and stop records in the input data.}
 
 \item{shpCRS}{Numeric, the EPSG code for the coordinate reference system
 (projection) of the coordinates in the input data.  Common projections for
 Wyoming:
 \itemize{
 \item 26912:  UTM NAD83 Zone 12N
-\item 26913:  UTM NAD83 Zone 13N
+\item 26913:  UTM NAD83 Zone 13N (default)
 }}
-
-\item{shpFile}{The path and name of the shapefile to write
-out containing the surveyed transects.
-If \code{shpFile = NULL} (the default), the file will be written to the
-same directory as the \code{inputFile}, with \code{"SurveyedTransects_"}
-prepended to the file name of the \code{inputFile}.  E.g, if
-\code{inputFile} is \code{"C:/Users/jcarlisle/Desktop/myInputFile.xlsx"} and
-\code{shpFile = NULL}, the output will be written to
-\code{"C:/Users/jcarlisle/Desktop/SurveyedTransects_myInputFile.shp"}.
-Alternatively, the user can specify the path and name of the shapefile.}
-
-\item{mapCreate}{Logical, should an interactive map of the surveyed transects and
-pronghorn observations be created and written to html file?}
-
-\item{mapFile}{The path and name of the html map to write
-out showing the surveyed transects and pronghorn observation locations.
-If \code{mapFile = NULL} (the default), the file will be written to the
-same directory as the \code{inputFile}, with \code{"Map_"}
-prepended to the file name of the \code{inputFile}.  E.g, if
-\code{inputFile} is \code{"C:/Users/jcarlisle/Desktop/myInputFile.xlsx"} and
-\code{mapFile = NULL}, the output will be written to
-\code{"C:/Users/jcarlisle/Desktop/Map_myInputFile.html"}.}
 }
 \value{
-Writes a tab-delimited text file to \code{outputFile}.  This file is
-ready for import into Program DISTANCE.  Also prints the
-following summaries in the R console:
-\itemize{
-\item Number of transects.
-\item Total transect length surveyed (km).
-\item Number of groups (clusters) detected.
-\item Assuming right-truncation at largest adjusted distance interval cutpoint, number of groups (clusters) in analysis.
-\item Number of individuals detected.
-\item Assuming right-truncation at largest adjusted distance interval cutpoint, number of individuals in analysis.
-\item Number of groups (clusters) that had missing flight heights
-\item Mean flight height (ft) at detections - before imputing missing values
-\item Mean flight height (ft) at detections - after imputing missing values
-\item Nominal distance interval cutpoints (m)
-\item Adjusted distance interval cutpoints (m)
-
-Returns a list with the detection data (ddf) and sites data (sdf) ready for
-analysis in \code{Rdistance}, and a data.frame of key summaries (i.e., a
-subset of those printed).
+Returns a list with six elements:
+\describe{
+ \item{ddf}{A data.frame of detection data.  One row for each group of
+   pronghorn detected.  See the \code{detectionData} argument of
+   \code{Rdistance::dfuncEstim} and \code{Rdistance::abundEstim}.}
+ \item{sdf}{A data.frame of site data.  One row for each site (transect)
+   surveyed.  See the \code{siteData} argument of
+   \code{Rdistance::dfuncEstim} and \code{Rdistance::abundEstim}.}
+ \item{txt}{A data.frame in the "flat file" format expected by Program
+   DISTANCE.  Ready to be written to a tab-delimited text file which can be
+   imported into Program DISTANCE.  The column names are
+   standardized to use names similar to Program DISTANCE (making import less
+   error-prone) and to clarify units:
+   \describe{
+   \item{lineLabel}{Unique name of each transect.}
+   \item{lineLengthKm}{Length of each transect in kilometers.}
+   \item{coordsX}{X coordinate from GPS.}
+   \item{coordsY}{Y coordinate from GPS.}
+   \item{flightHeightFt}{Height of airplane (AGL) in feet.}
+   \item{clusterSize}{Number of pronghorn in detected group.}
+   \item{distBand}{Distance band the pronghorn were detected in.}
+   \item{adjustedDistM}{Estimated distance from transect to the detected
+   pronghorn group in meters. Based on the midpoint of the distance band
+   containing the detected group, adjusted for the flight height at the time
+   of detection.}
+   }}
+ \item{sumTable}{A data.frame of summaries of the input dataset, meant to aid
+   in QAQC and troubleshooting.}
+ \item{sfLines}{An sf object of the transect lines as surveyed.
+   The transects are reconstructed from the transect start and stop records
+   in the input data.
+   See the \code{shpCRS} argument to specify a coordinate reference system.}
+ \item{sfPoints}{An sf object of the detection points.  The points are
+   created from the sighting records in the input data.  Note, these
+   locations represent the location of the plane when a pronghorn
+   group was detected, not the location of the pronghorn group itself.
+   See the \code{shpCRS} argument to specify a coordinate reference system.}
 }
 }
 \description{
-This function reads in raw data exported from CyberTracker
-software and prepares it for input to Program DISTANCE for a
-distance-sampling analysis.
-The prepped data is written to file, and some summaries of the data are
-printed to the R console.
+This function reads in raw survey data exported from
+CyberTracker software and prepares it for distance-sampling analysis in
+Program R or Program DISTANCE.
 }
 \examples{
 \dontrun{
-# Read in Sheet1 of myInputFile.xlsx, and write out myOutputFile.txt
-# Skip option to write out shapefile of transects as surveyed
-# And skip option to write out interactive map
+# Read in Sheet1 of myInputFile.xlsx
 x <- prepDataForAnalysis(inputFile = "C:/Users/myUserName/Desktop/myInputFile.xlsx",
-                    inputSheet = "Sheet1",
-                    outputFile = "C:/Users/myUserName/Desktop/myOutputFile.txt",
-                    shpCreate = FALSE,
-                    mapCreate = FALSE)
-
-# A txt file of the data ready for analysis in Program DISTANCE was
-# written out.  If you need to access the underlying datasets in R, they're
-# stored too.
+                    inputSheet = "Sheet1")
 
 # Detection data (one row per group detected)
 head(x$ddf)
@@ -165,8 +107,23 @@ head(x$ddf)
 # Site data (one row per transect surveyed)
 head(x$sdf)
 
-# A subset of the summaries printed out
+# Both detection and site data (flat file) ready for import to Program DISTANCE
+head(x$txt)
+
+# Summaries of the data (to aid QAQC)
 x$sumTable
+
+# Map of transects as flown
+plot(sf::st_geometry(x$sfLines))
+
+# Map of pronghorn detection locations (plane location)
+plot(sf::st_geometry(x$sfPoints))
+
+# Interactive map of both lines and points
+# Points are sized based on group size
+mapview::mapview(x$sfLines, color = "blue", legend = FALSE) +
+  mapview::mapview(x$sfPoints, cex = "s", label = "s")
+
 }
 }
 \references{
