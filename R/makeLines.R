@@ -13,13 +13,13 @@
 #' @param angle Orientation of the transects. \code{angle = 0} produces
 #' transects oriented North-South (the default), \code{angle = 90} produces
 #' East-West transects.
-#' @param minLengthKm Minimum length required for an individual transect line
-#' (in kilometers)
+#' @param minLengthKm Minimum length (km) required for an individual transect
+#' line to be surveyed.
 #' @param offset An offset to use when placing transects. By default the central
 #' transect is aligned with the center of the polygon.
-#' @param minSpace Optional minimal line spacing (in kilometers) to consider when
+#' @param minSpace Optional minimal line spacing (in km) to consider when
 #' optimizing transect placement (default is NULL).
-#' @param maxSpace Optional maximum line spacing (in kilometers) to consider when
+#' @param maxSpace Optional maximum line spacing (in km) to consider when
 #' optimizing transect placement (default is NULL).
 #' @param optimTol Optional tolerance value indicating the maximum allowable
 #' deviation from \code{totalLengthKm} expressed as a proportion (default is 0.01).
@@ -40,7 +40,7 @@
 #'   \item{summary}{\code{data.frame} summary of transect lines}
 #' }
 #'
-#' @author Tom Prebyl, minor contributions by Jason Carlisle
+#' @author Tom Prebyl, minor contributions by Jason Carlisle and Garrett Catlin
 #' @importFrom sf st_difference st_union st_coordinates st_sfc st_bbox st_crs st_length st_write st_linestring
 #' @import spatstat
 #' @import spatstat.geom
