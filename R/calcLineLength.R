@@ -51,6 +51,9 @@ calcLineLength <- function(occupiedPolygon,
                            targetGroups = 300,
                            avgGroupSize = 2.3) {
 
+  # Union for multiple features
+  occupiedPolygon <- sf::st_union(occupiedPolygon)
+
   # Calculate area
   area <- sf::st_area(occupiedPolygon)
 

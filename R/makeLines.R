@@ -85,26 +85,32 @@ makeLines <- function(sPoly,
   # Convert so user inputs are more intuitive 0 = N-S, 90 = E-W
   angle <- (angle*-1)-90
 
-
   # Convert km to m
   targLenM <- totalLengthKm*1000
   minLength <- minLengthKm*1000
 
-  # Erase exclusion polygon
-  if(!is.null(xPoly)) {
+  # union sPoly with itself & extract coordinates
+  sPoly <- sf::st_union(sPoly)
+  polyCoords <- st_coordinates(sPoly)
+
+  # initialize list for spatstat.geom::owin()
+  owinList <- list(list(x = rev(polyCoords[,1]), y = rev(polyCoords[,2])))
+
+  # if xPoly is passed
+  if (!is.null(xPoly)) {
+    # transform xPoly to be in same crs as sPoly
     xPoly <- sf::st_transform(xPoly, sf::st_crs(sPoly))
-    diffPoly <- sf::st_difference(sf::st_union(sPoly),
-                              sf::st_union(xPoly))
-  }
-  else {
-    diffPoly <- sf::st_union(sPoly)
+
+    # then append cutouts for spatstat.geom::owin() to the owinList
+    for (row in 1:nrow(xPoly)) {
+      xCoords <- sf::st_coordinates(xPoly[row,])
+      listAppend <- list(x = xCoords[,1], y = xCoords[,2])
+      owinList <- append(owinList, list(listAppend))
+    }
   }
 
-  # Convert polygon to spatstat window
-  polyCoord <- sf::st_coordinates(diffPoly)
-  polyWin <- spatstat.geom::owin(poly = list(x = rev(polyCoord[, 1]),
-                                             y = rev(polyCoord[, 2])))
-
+  # create spatstat window using owinList
+  polyWin <- spatstat.geom::owin(poly = owinList)
 
   # Estimate approx line spacing (using area)
   totSqKM <- as.numeric(sf::st_area(sPoly)*1e-06)
@@ -173,7 +179,7 @@ makeLines <- function(sPoly,
   lines <- lapply(1:nrow(matLines), function(x) {
     sf::st_linestring(matrix(matLines[x,],ncol=2, byrow = TRUE))
   })
-  sfLines <- sf::st_sfc(lines, crs = sf::st_crs(diffPoly))
+  sfLines <- sf::st_sfc(lines, crs = sf::st_crs(sPoly))
 
   # Add attributes
   sfLines <- sf::st_sf(sfLines)
