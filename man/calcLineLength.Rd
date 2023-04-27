@@ -26,7 +26,7 @@ from past surveys are likely your best option here.  Used to calculate the
 expected density of pronghorn in the survey area.}
 
 \item{p}{Scalar, expected probability of detecting pronghorn in the herd
-unit.  Defaults to 0.58, the average p from past surveys in Wyoming.}
+unit.  Defaults to 0.58, the average p from surveys conducted before 2022.}
 
 \item{w}{Scalar, width (m) of the survey strip.  Defaults to 200 m, the
 standard width using the Wyoming survey protocol.}
@@ -36,8 +36,8 @@ pronghorn groups, which is a bit subjective, but should provide plenty of
 detections to fit a robust detection model.}
 
 \item{avgGroupSize}{Scalar, expected average number of pronghorn in each
-group detected.  Defaults to 2.3, the average group size from past surveys
-in Wyoming.}
+group detected.  Defaults to 2.3, the average group size from surveys
+conducted before 2022.}
 }
 \value{
 Scalar, the total length (km) of transects to survey.

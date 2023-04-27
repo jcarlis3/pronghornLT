@@ -32,16 +32,16 @@ exclusion area where line transects will not be generated.}
 transects oriented North-South (the default), \code{angle = 90} produces
 East-West transects.}
 
-\item{minLengthKm}{Minimum length required for an individual transect line
-(in kilometers)}
+\item{minLengthKm}{Minimum length (km) required for an individual transect
+line to be surveyed.}
 
 \item{offset}{An offset to use when placing transects. By default the central
 transect is aligned with the center of the polygon.}
 
-\item{minSpace}{Optional minimal line spacing (in kilometers) to consider when
+\item{minSpace}{Optional minimal line spacing (in km) to consider when
 optimizing transect placement (default is NULL).}
 
-\item{maxSpace}{Optional maximum line spacing (in kilometers) to consider when
+\item{maxSpace}{Optional maximum line spacing (in km) to consider when
 optimizing transect placement (default is NULL).}
 
 \item{optimTol}{Optional tolerance value indicating the maximum allowable
@@ -94,5 +94,5 @@ plot(testLines$lines['lineID'], add = T, col = 'red')
 }
 }
 \author{
-Tom Prebyl, minor contributions by Jason Carlisle
+Tom Prebyl, minor contributions by Jason Carlisle and Garrett Catlin
 }
