@@ -103,7 +103,7 @@ makeLines <- function(sPoly,
 
     # convert xPoly to POLYGON if MULTIPOLYGON
     if ("sfc_MULTIPOLYGON" %in% class(xPoly$geometry)) {
-      xPoly <- sf::st_cast(xPoly, "POLYGON")
+      xPoly <- sf::st_cast(xPoly, "POLYGON", warn = FALSE)
     }
 
     # then append cutouts for spatstat.geom::owin() to the owinList
