@@ -101,6 +101,11 @@ makeLines <- function(sPoly,
     # transform xPoly to be in same crs as sPoly
     xPoly <- sf::st_transform(xPoly, sf::st_crs(sPoly))
 
+    # convert xPoly to POLYGON if MULTIPOLYGON
+    if ("sfc_MULTIPOLYGON" %in% class(xPoly$geometry)) {
+      xPoly <- sf::st_cast(xPoly, "POLYGON")
+    }
+
     # then append cutouts for spatstat.geom::owin() to the owinList
     for (row in 1:nrow(xPoly)) {
       xCoords <- sf::st_coordinates(xPoly[row,])
