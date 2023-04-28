@@ -91,9 +91,10 @@ Returns a list with six elements:
 }
 }
 \description{
-This function reads in raw survey data exported from
-CyberTracker software and prepares it for distance-sampling analysis in
-Program R or Program DISTANCE.
+This function reads in raw survey data collected during
+aerial line transect surveys for pronghorn (exported directly from
+CyberTracker data-collection software) and prepares it for distance-sampling
+analysis in Program R or Program DISTANCE.
 }
 \examples{
 \dontrun{
@@ -123,7 +124,6 @@ plot(sf::st_geometry(x$sfPoints))
 # Points are sized based on group size
 mapview::mapview(x$sfLines, color = "blue", legend = FALSE) +
   mapview::mapview(x$sfPoints, cex = "s", label = "s")
-
 }
 }
 \references{
