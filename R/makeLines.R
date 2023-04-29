@@ -267,17 +267,17 @@ makeLines <- function(sPoly,
     sfLinesChange <- sf::st_cast(sfLinesChange, "LINESTRING")
 
     # create sf/data.table object, add length
-    sfLinesChange = addLength(sfLinesChange)
+    sfLinesChange <- addLength(sfLinesChange)
 
     # rbind
-    sfLines = rbind(sfLinesKeep, sfLinesChange)
+    sfLines <- rbind(sfLinesKeep, sfLinesChange)
   }
 
   # add length to sfLines
   sfLines <- addLength(sfLines)
 
   # remove any less than minlengthKm
-  sfLines = sfLines[lengthKm >= minLengthKm]
+  sfLines <- sfLines[lengthKm >= minLengthKm]
 
   # get centroid of all lines (to see which ha they are in)
   lineCenters <- sf::st_centroid(sfLines$x)
@@ -302,7 +302,7 @@ makeLines <- function(sPoly,
 
   # sort from w-e, s-n
   sortCoords <- sf::st_coordinates(sf::st_centroid(sfLines$x))
-  sfLines = sfLines[order(sortCoords[,"X"], sortCoords[,"Y"]),]
+  sfLines <- sfLines[order(sortCoords[,"X"], sortCoords[,"Y"]),]
 
   # make ID based on sort & key
   sfLines[, ID := 1:.N, by = .(HerdName, HuntName)]
