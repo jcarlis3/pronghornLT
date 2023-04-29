@@ -313,7 +313,7 @@ makeLines <- function(sPoly,
   sfLines[, c("TransectPrefix", "ID") := NULL]
 
   # finally, transform to sf again
-  sfLines <- st_as_sf(sfLines)
+  sfLines <- sf::st_as_sf(sfLines)
 
   # Make summary info
   outSumm <- list(
