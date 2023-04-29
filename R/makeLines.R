@@ -17,6 +17,14 @@
 #' line to be surveyed.
 #' @param offset An offset to use when placing transects. By default the central
 #' transect is aligned with the center of the polygon.
+#' @param considerHuntArea Breaks transects as they cross over hunt areas
+#' (defaults to TRUE).
+#' @param huntAreaBuffer Buffer by which to break transects when considerHuntArea
+#' is TRUE (defaults to 1000 km).
+#' @param breakLongLines Splits longer transects into more digestible pieces
+#' (defaults to TRUE).
+#' @param breakLongLineLength Limit for maximum line length (in km) if
+#' breakLongLines is TRUE (defaults to 40 km).
 #' @param minSpace Optional minimal line spacing (in km) to consider when
 #' optimizing transect placement (default is NULL).
 #' @param maxSpace Optional maximum line spacing (in km) to consider when
@@ -44,6 +52,7 @@
 #' @importFrom sf st_difference st_union st_coordinates st_sfc st_bbox st_crs st_length st_write st_linestring
 #' @import spatstat
 #' @import spatstat.geom
+#' @rawNamespace import(data.table, except = shift)
 #' @export
 #'
 #' @examples
@@ -75,6 +84,10 @@ makeLines <- function(sPoly,
               angle = 0,
               minLengthKm = 2.0,
               offset = 0,
+              considerHuntArea = TRUE,
+              huntAreaBuffer = 1000,
+              breakLongLines = TRUE,
+              breakLongLineLength = 40,
               minSpace = NULL,
               maxSpace = NULL,
               optimTol = 0.01,
@@ -188,13 +201,124 @@ makeLines <- function(sPoly,
 
   # Add attributes
   sfLines <- sf::st_sf(sfLines)
-  sfLines$lineID <- 1:nrow(sfLines)
-  sfLines$lengthKM <- as.numeric(sf::st_length(sfLines)/1000)
+  # sfLines$lineID <- 1:nrow(sfLines)
+  # sfLines$lengthKM <- as.numeric(sf::st_length(sfLines)/1000)
+
+  # split transects at hunt areas?
+  if (considerHuntArea) {
+    # get hunt area pertinent to sPoly
+    haPoly <- sf::st_difference(sPoly, huntAreas$geometry)
+
+    # create outline of herd unit & cast
+    outline <- sf::st_cast(sPoly, "MULTILINESTRING")
+
+    # buffer this outline (to avoid placing pts on hu border)
+    outlineBuffer <- sf::st_buffer(outline, units::as_units(huntAreaBuffer, "m"))
+
+    # cast borders to multilinestring
+    haBorders <- sf::st_cast(haPoly, "MULTILINESTRING")
+
+    # remove outer borders
+    haBorders <- sf::st_difference(haBorders, outlineBuffer)
+
+    # get intersections as points
+    intersectPoints <- sf::st_intersection(sfLines, haBorders)
+    intersectPoints <- sf::st_combine(intersectPoints)
+
+    # cast points
+    intersectPoints <- sf::st_cast(intersectPoints, "POINT")
+
+    # add buffer to points
+    intersectPoints <- sf::st_buffer(intersectPoints, units::as_units(huntAreaBuffer, "m"))
+
+    # add buffer to points
+    intersectPoints <- sf::st_buffer(intersectPoints, units::as_units(1000, "m"))
+
+    # get intersections
+    lineCutouts <- sf::st_combine(st_intersection(sfLines, intersectPoints))
+
+    # new lines
+    sfLines <- sf::st_difference(sfLines, lineCutouts)
+    sfLines <- sf::st_combine(sfLines)
+    sfLines <- sf::st_cast(sfLines, "LINESTRING")
+  }
+
+  # split long transects?
+  if (breakLongLines) {
+    # add length to sfLines
+    sfLines <- addLength(sfLines)
+
+    # if transect km > X, split at centers
+    sfLinesKeep <- sfLines[lengthKm <= breakLongLineLength]
+    sfLinesChange <- sfLines[lengthKm > breakLongLineLength]
+
+    # get centroids to change
+    changeCentroids <- sf::st_centroid(sfLinesChange$x)
+
+    # add buffer to centers
+    changeCentroids <- sf::st_buffer(changeCentroids, units::as_units(1000, "m"))
+
+    # get intersections
+    lineCutouts <- sf::st_combine(sf::st_intersection(sfLinesChange$x, changeCentroids))
+
+    # get new lines
+    sfLinesChange <- sf::st_difference(sfLinesChange$x, lineCutouts)
+    sfLinesChange <- sf::st_combine(sfLinesChange)
+    sfLinesChange <- sf::st_cast(sfLinesChange, "LINESTRING")
+
+    # create sf/data.table object, add length
+    sfLinesChange = addLength(sfLinesChange)
+
+    # rbind
+    sfLines = rbind(sfLinesKeep, sfLinesChange)
+  }
+
+  # add length to sfLines
+  sfLines <- addLength(sfLines)
+
+  # remove any less than minlengthKm
+  sfLines = sfLines[lengthKm >= minLengthKm]
+
+  # get centroid of all lines (to see which ha they are in)
+  lineCenters <- sf::st_centroid(sfLines$x)
+
+  # set agr to remove warning message
+  huntAreasAGR <- huntAreas
+  sf::st_agr(huntAreasAGR) = "constant"
+
+  # add info to centroids
+  lineCenters <- sf::st_intersection(huntAreasAGR, lineCenters)
+
+  # add info to transects
+  sfLines[, HuntName := lineCenters$HUNTNAME]
+  sfLines[, HerdName := lineCenters$HERDNAME]
+  sfLines[, HuntNo := lineCenters$HUNTAREA]
+  sfLines[, HerdNo := lineCenters$HERDUNIT]
+
+  # add prefix
+  sfLines[, TransectPrefix := paste0(HerdName, "_", HuntName,"_")]
+  sfLines[, TransectPrefix := gsub(" ", "", TransectPrefix)]
+  sfLines[, TransectPrefix := gsub("-", "", TransectPrefix)]
+
+  # sort from w-e, s-n
+  sortCoords <- sf::st_coordinates(sf::st_centroid(sfLines$x))
+  sfLines = sfLines[order(sortCoords[,"X"], sortCoords[,"Y"]),]
+
+  # make ID based on sort & key
+  sfLines[, ID := 1:.N, by = .(HerdName, HuntName)]
+  data.table::setkey(sfLines, TransectPrefix, ID)
+
+  # add line ID and remove prefix and ID
+  sfLines[, LineID := paste0(TransectPrefix, ID)]
+  sfLines[, c("TransectPrefix", "ID") := NULL]
+
+  # finally, transform to sf again
+  sfLines <- st_as_sf(sfLines)
 
   # Make summary info
   outSumm <- list(
     nLines = nrow(sfLines),
-    genTotalLengthKm = sum(sfLines$lengthKM),
+    genTotalLengthKm = sum(sfLines$lengthKm),
     spacingKm = optimSpace$minimum/1000
     # approxRatio = optimSpace$minimum/approxSpace
     )
@@ -208,8 +332,6 @@ makeLines <- function(sPoly,
   print(outSumm)
   return(list(lines = sfLines, summary = outSumm))
 }
-
-
 
 # Helper Functions--------------------------------------------------------------
 # Define a function to generate lines (modified from spatstat.geom::rlinegrid())
@@ -395,4 +517,15 @@ localmin <- function (x, n.points = 2) {
   else {
     return(NA)
   }
+}
+
+# helper function for adding length to sfLines
+addLength <- function(dt) {
+  dt <- sf::st_as_sf(dt)
+  dt <- data.table::as.data.table(dt)
+  dt[, length := sf::st_length(x)]
+  dt[, lengthKm := units::set_units(length, "km")]
+  dt[, lengthMi := units::set_units(length, "mi")]
+  dt[, length := NULL]
+  dt[, c("lengthKm", "lengthMi") := lapply(.SD, as.numeric), .SDcols = c("lengthKm", "lengthMi")]
 }

@@ -8,3 +8,5 @@
 # setwd(rstudioapi::selectDirectory())
 #
 # usethis::use_data(huntAreas, herdUnits)
+# usethis::use_data(huntAreas, herdUnits, internal = T)
+
