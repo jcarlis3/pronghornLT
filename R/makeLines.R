@@ -248,29 +248,33 @@ makeLines <- function(sPoly,
     # add length to sfLines
     sfLines <- addLength(sfLines)
 
-    # if transect km > X, split at centers
-    sfLinesKeep <- sfLines[lengthKm <= breakLongLineLength]
-    sfLinesChange <- sfLines[lengthKm > breakLongLineLength]
+    # loop
+    while (nrow(sfLines[lengthKm > breakLongLineLength]) > 0) {
 
-    # get centroids to change
-    changeCentroids <- sf::st_centroid(sfLinesChange$x)
+      # if transect km > X, split at centers
+      sfLinesKeep <- sfLines[lengthKm <= breakLongLineLength]
+      sfLinesChange <- sfLines[lengthKm > breakLongLineLength]
 
-    # add buffer to centers
-    changeCentroids <- sf::st_buffer(changeCentroids, units::as_units(1000, "m"))
+      # get centroids to change
+      changeCentroids <- sf::st_centroid(sfLinesChange$x)
 
-    # get intersections
-    lineCutouts <- sf::st_combine(sf::st_intersection(sfLinesChange$x, changeCentroids))
+      # add buffer to centers
+      changeCentroids <- sf::st_buffer(changeCentroids, units::as_units(1000, "m"))
 
-    # get new lines
-    sfLinesChange <- sf::st_difference(sfLinesChange$x, lineCutouts)
-    sfLinesChange <- sf::st_combine(sfLinesChange)
-    sfLinesChange <- sf::st_cast(sfLinesChange, "LINESTRING")
+      # get intersections
+      lineCutouts <- sf::st_combine(sf::st_intersection(sfLinesChange$x, changeCentroids))
 
-    # create sf/data.table object, add length
-    sfLinesChange <- addLength(sfLinesChange)
+      # get new lines
+      sfLinesChange <- sf::st_difference(sfLinesChange$x, lineCutouts)
+      sfLinesChange <- sf::st_combine(sfLinesChange)
+      sfLinesChange <- sf::st_cast(sfLinesChange, "LINESTRING")
 
-    # rbind
-    sfLines <- rbind(sfLinesKeep, sfLinesChange)
+      # create sf/data.table object, add length
+      sfLinesChange <- addLength(sfLinesChange)
+
+      # rbind
+      sfLines <- rbind(sfLinesKeep, sfLinesChange)
+    }
   }
 
   # add length to sfLines
