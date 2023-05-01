@@ -104,7 +104,7 @@ makeLines <- function(sPoly,
 
   # union sPoly with itself & extract coordinates
   sPoly <- sf::st_union(sPoly)
-  polyCoords <- st_coordinates(sPoly)
+  polyCoords <- sf::st_coordinates(sPoly)
 
   # initialize list for spatstat.geom::owin()
   owinList <- list(list(x = rev(polyCoords[,1]), y = rev(polyCoords[,2])))
@@ -201,8 +201,8 @@ makeLines <- function(sPoly,
 
   # Add attributes
   sfLines <- sf::st_sf(sfLines)
-  # sfLines$lineID <- 1:nrow(sfLines)
-  # sfLines$lengthKM <- as.numeric(sf::st_length(sfLines)/1000)
+  sfLines <- sf::st_combine(sfLines)
+  sfLines <- sf::st_cast(sfLines, "LINESTRING")
 
   # split transects at hunt areas?
   if (considerHuntArea) {
@@ -225,22 +225,25 @@ makeLines <- function(sPoly,
     intersectPoints <- sf::st_intersection(sfLines, haBorders)
     intersectPoints <- sf::st_combine(intersectPoints)
 
-    # cast points
-    intersectPoints <- sf::st_cast(intersectPoints, "POINT")
+    # if isn't empty
+    if (!sf::st_is_empty(intersectPoints)) {
+      # cast points
+      intersectPoints <- sf::st_cast(intersectPoints, "POINT")
 
-    # add buffer to points
-    intersectPoints <- sf::st_buffer(intersectPoints, units::as_units(huntAreaBuffer, "m"))
+      # add buffer to points
+      intersectPoints <- sf::st_buffer(intersectPoints, units::as_units(huntAreaBuffer, "m"))
 
-    # add buffer to points
-    intersectPoints <- sf::st_buffer(intersectPoints, units::as_units(1000, "m"))
+      # add buffer to points
+      intersectPoints <- sf::st_buffer(intersectPoints, units::as_units(1000, "m"))
 
-    # get intersections
-    lineCutouts <- sf::st_combine(sf::st_intersection(sfLines, intersectPoints))
+      # get intersections
+      lineCutouts <- sf::st_combine(sf::st_intersection(sfLines, intersectPoints))
 
-    # new lines
-    sfLines <- sf::st_difference(sfLines, lineCutouts)
-    sfLines <- sf::st_combine(sfLines)
-    sfLines <- sf::st_cast(sfLines, "LINESTRING")
+      # new lines
+      sfLines <- sf::st_difference(sfLines, lineCutouts)
+      sfLines <- sf::st_combine(sfLines)
+      sfLines <- sf::st_cast(sfLines, "LINESTRING")
+    }
   }
 
   # split long transects?
