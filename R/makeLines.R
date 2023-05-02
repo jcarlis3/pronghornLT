@@ -307,9 +307,9 @@ makeLines <- function(sPoly,
   sfLines[, TransectPrefix := gsub(" ", "", TransectPrefix)]
   sfLines[, TransectPrefix := gsub("-", "", TransectPrefix)]
 
-  # sort from w-e, s-n
+  # sort from w-e, n-s
   sortCoords <- sf::st_coordinates(sf::st_centroid(sfLines$x))
-  sfLines <- sfLines[order(sortCoords[,"X"], sortCoords[,"Y"]),]
+  sfLines <- sfLines[order(sortCoords[,"X"], -sortCoords[,"Y"]),]
 
   # make ID based on sort & key
   sfLines[, ID := 1:.N, by = .(HerdName, HuntName)]
