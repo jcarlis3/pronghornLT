@@ -11,6 +11,10 @@ makeLines(
   angle = 0,
   minLengthKm = 2,
   offset = 0,
+  considerHuntArea = TRUE,
+  huntAreaBuffer = 1000,
+  breakLongLines = TRUE,
+  breakLongLineLength = 40,
   minSpace = NULL,
   maxSpace = NULL,
   optimTol = 0.01,
@@ -37,6 +41,18 @@ line to be surveyed.}
 
 \item{offset}{An offset to use when placing transects. By default the central
 transect is aligned with the center of the polygon.}
+
+\item{considerHuntArea}{Breaks transects as they cross over hunt areas
+(defaults to TRUE).}
+
+\item{huntAreaBuffer}{Buffer by which to break transects when considerHuntArea
+is TRUE (defaults to 1000 km).}
+
+\item{breakLongLines}{Splits longer transects into more digestible pieces
+(defaults to TRUE).}
+
+\item{breakLongLineLength}{Limit for maximum line length (in km) if
+breakLongLines is TRUE (defaults to 40 km).}
 
 \item{minSpace}{Optional minimal line spacing (in km) to consider when
 optimizing transect placement (default is NULL).}
