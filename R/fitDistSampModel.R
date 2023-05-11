@@ -37,9 +37,7 @@
 #' dataPath <- "C:/Users/jadcarlisle/Desktop/demo"
 #' x <- prepDataForAnalysis(inputFile = file.path(dataPath,
 #'                                               "Data_PronghornLT_Rattlesnake_2022.xlsx"),
-#'                        inputSheet = 1,
-#'                        shpCreate = FALSE,
-#'                         mapCreate = FALSE)
+#'                        inputSheet = 1)
 #'
 #' # Fit distance-sampling model to estimate abundance
 #' # Key input data are the x$ddf and x$sdf data.frames from prepDataForAnalysis
@@ -85,10 +83,9 @@ fitDistSampModel <- function(ddf,
 
 
   # Fit detection function
-  # offset(s) is new Rdistance syntax for specifying group size column
   # Specifying outputUnits = "m" will provide distance measures in m
   # and density estimate in mi^2 (we'll convert those to mi^2 in the app)
-  dfunc <- Rdistance::dfuncEstim(formula = dist ~ 1 + offset(s),
+  dfunc <- Rdistance::dfuncEstim(formula = dist ~ 1 + groupsize(s),
                                  detectionData = ddf,
                                  likelihood = keyFun,
                                  expansions = 0,
