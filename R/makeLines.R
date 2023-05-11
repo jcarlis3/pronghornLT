@@ -267,6 +267,9 @@ makeLines <- function(sPoly,
       # get intersections
       lineCutouts <- sf::st_combine(sf::st_intersection(sfLinesChange$x, changeCentroids))
 
+      # add buffer (weird sf error handling)
+      lineCutouts <- sf::st_buffer(lineCutouts, 50)
+
       # get new lines
       sfLinesChange <- sf::st_difference(sfLinesChange$x, lineCutouts)
       sfLinesChange <- sf::st_combine(sfLinesChange)
