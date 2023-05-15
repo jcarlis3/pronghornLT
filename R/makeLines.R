@@ -323,6 +323,7 @@ makeLines <- function(sPoly,
 
   # add line ID and remove prefix and ID
   sfLines[, LineID := paste0(TransectPrefix, ID)]
+  sfLines[, LineShortID := paste0(HuntNo, "_", ID)]
   sfLines[, c("TransectPrefix", "ID") := NULL]
 
   # finally, transform to sf again
