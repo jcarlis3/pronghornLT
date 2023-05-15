@@ -33,6 +33,8 @@
 #' deviation from \code{totalLengthKm} expressed as a proportion (default is 0.01).
 #' When the function fails to find a solution within the specified tolerance an
 #' error is returned.
+#' @param optimQuick if TRUE, the initial optimization is used. Helpful for when
+#' calculations need to fail quickly.
 #' @param outFile Optional output filename for a saving a spatial layer containing
 #' the line transects. Typically, this will be a shapefile
 #' (e.g. "C:/Temp/myLines.shp")
@@ -91,6 +93,7 @@ makeLines <- function(sPoly,
               minSpace = NULL,
               maxSpace = NULL,
               optimTol = 0.01,
+              optimQuick = FALSE,
               outFile = NULL,
               overwrite = TRUE) {
 
@@ -157,7 +160,7 @@ makeLines <- function(sPoly,
   )
 
   # If quick optim failed, try more intensive manual search
-  if(optimSpace$objective > targLenM*optimTol) {
+  if(optimSpace$objective > targLenM*optimTol && !(optimQuick)) {
     op <- options("warn")
     on.exit(options(op))
     options(warn=1)
@@ -175,7 +178,7 @@ makeLines <- function(sPoly,
   }
 
 
-  if(optimSpace$objective > targLenM*optimTol) {
+  if(optimSpace$objective > targLenM*optimTol && !(optimQuick)) {
     stop(paste0("Optimization failed to generate lines with supplied parameters\n",
                 "Consider setting minSpace and maxSpace parameters\n",
                 "or increasing optimTol.",
