@@ -239,6 +239,9 @@ makeLines <- function(sPoly,
       # get intersections
       lineCutouts <- sf::st_combine(sf::st_intersection(sfLines, intersectPoints))
 
+      # add buffer (weird sf error handling)
+      lineCutouts <- sf::st_buffer(lineCutouts, 50)
+
       # new lines
       sfLines <- sf::st_difference(sfLines, lineCutouts)
       sfLines <- sf::st_combine(sfLines)
