@@ -104,8 +104,11 @@ makeLines <- function(sPoly,
 
   # if xPoly is passed
   if (!is.null(xPoly)) {
-    # transform xPoly to be in same crs as sPoly
-    xPoly <- sf::st_transform(xPoly, sf::st_crs(sPoly))
+
+    # If needed, transform xPoly to be in same crs as sPoly
+    if (st_crs(xPoly) != st_crs(sPoly)) {
+      xPoly <- sf::st_transform(xPoly, crs = sf::st_crs(sPoly))
+    }
 
     # convert xPoly to POLYGON if MULTIPOLYGON
     if ("sfc_MULTIPOLYGON" %in% class(xPoly$geometry)) {
@@ -200,8 +203,10 @@ makeLines <- function(sPoly,
   # split transects at hunt areas?
   if (considerHuntArea) {
 
-    # project hunt area object to same crs as sPoly
-    huntAreas <- sf::st_transform(huntAreas, crs = sf::st_crs(sPoly))
+    # If needed, project hunt area object to same crs as sPoly
+    if (st_crs(huntAreas) != st_crs(sPoly)) {
+      huntAreas <- sf::st_transform(huntAreas, crs = sf::st_crs(sPoly))
+    }
 
     # get hunt area pertinent to sPoly
     haPoly <- sf::st_difference(sPoly, huntAreas$geometry)
