@@ -215,7 +215,7 @@ makeLines <- function(sPoly,
     outline <- sf::st_cast(sPoly, "MULTILINESTRING")
 
     # buffer this outline (to avoid placing pts on hu border)
-    outlineBuffer <- sf::st_buffer(outline, units::as_units(huntAreaBuffer, "m"))
+    outlineBuffer <- sf::st_buffer(outline, units::as_units(50, "m"))
 
     # cast borders to multilinestring
     haBorders <- sf::st_cast(haPoly, "MULTILINESTRING")
