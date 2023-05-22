@@ -51,7 +51,7 @@
 #' }
 #'
 #' @author Tom Prebyl, minor contributions by Jason Carlisle and Garrett Catlin
-#' @importFrom sf st_difference st_union st_coordinates st_sfc st_bbox st_crs st_length st_write st_linestring
+#' @importFrom sf st_difference st_union st_coordinates st_sfc st_bbox st_crs st_length st_write st_linestring st_transform
 #' @import spatstat
 #' @import spatstat.geom
 #' @rawNamespace import(data.table, except = shift)
@@ -209,6 +209,10 @@ makeLines <- function(sPoly,
 
   # split transects at hunt areas?
   if (considerHuntArea) {
+
+    # project hunt area object to same crs as sPoly
+    huntAreas <- sf::st_transform(huntAreas, crs = sf::st_crs(sPoly))
+
     # get hunt area pertinent to sPoly
     haPoly <- sf::st_difference(sPoly, huntAreas$geometry)
 
