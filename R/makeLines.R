@@ -4,10 +4,10 @@
 #' line transects for a given polygon area and desired total
 #' transect length.
 #'
-#' @param sPoly  \code{sf} object, the input polygon within which line transects
+#' @param sPoly \code{sf} object, the input polygon within which line transects
 #'  will be generated. The coordinate system
 #'  must use meters as the linear unit (e.g. EPSG=26913)
-#' @param xPoly  \code{sf} object, optional input polygon that defines an
+#' @param xPoly \code{sf} object, optional input polygon that defines an
 #' exclusion area where line transects will not be generated.
 #' @param totalLengthKm Total length of transects to generate (in kilometers)
 #' @param angle Orientation of the transects. \code{angle = 0} produces

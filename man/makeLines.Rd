@@ -18,9 +18,7 @@ makeLines(
   minSpace = NULL,
   maxSpace = NULL,
   optimTol = 0.01,
-  optimQuick = FALSE,
-  outFile = NULL,
-  overwrite = TRUE
+  optimQuick = FALSE
 )
 }
 \arguments{
@@ -68,15 +66,6 @@ error is returned.}
 
 \item{optimQuick}{if TRUE, the initial optimization is used. Helpful for when
 calculations need to fail quickly.}
-
-\item{outFile}{Optional output filename for a saving a spatial layer containing
-the line transects. Typically, this will be a shapefile
-(e.g. "C:/Temp/myLines.shp")
-The file extension can be any accepted by \code{sf::st_write()}}
-
-\item{overwrite}{If \code{outFile} is specified, and a file already exists
-with that name, should that existing file be overwritten by the new one?
-(default is TRUE)}
 }
 \value{
 Returns a list object containing the transect lines and
@@ -101,7 +90,6 @@ testLines <- makeLines(sPoly = hu,
      xPoly = NULL,
      totalLengthKm = 1000,
      angle = 0,
-     outFile = NULL,
      minSpace = NULL,
      maxSpace = NULL)
 
@@ -114,5 +102,5 @@ plot(testLines$lines['lineID'], add = T, col = 'red')
 }
 }
 \author{
-Tom Prebyl, minor contributions by Jason Carlisle and Garrett Catlin
+Tom Prebyl, Jason Carlisle, and Garrett Catlin
 }
