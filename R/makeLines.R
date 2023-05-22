@@ -35,13 +35,6 @@
 #' error is returned.
 #' @param optimQuick if TRUE, the initial optimization is used. Helpful for when
 #' calculations need to fail quickly.
-#' @param outFile Optional output filename for a saving a spatial layer containing
-#' the line transects. Typically, this will be a shapefile
-#' (e.g. "C:/Temp/myLines.shp")
-#' The file extension can be any accepted by \code{sf::st_write()}
-#' @param overwrite If \code{outFile} is specified, and a file already exists
-#' with that name, should that existing file be overwritten by the new one?
-#' (default is TRUE)
 #'
 #' @return Returns a list object containing the transect lines and
 #' a summary dataframe:
@@ -50,7 +43,7 @@
 #'   \item{summary}{\code{data.frame} summary of transect lines}
 #' }
 #'
-#' @author Tom Prebyl, minor contributions by Jason Carlisle and Garrett Catlin
+#' @author Tom Prebyl, Jason Carlisle, and Garrett Catlin
 #' @importFrom sf st_difference st_union st_coordinates st_sfc st_bbox st_crs st_length st_write st_linestring st_transform
 #' @import spatstat
 #' @import spatstat.geom
@@ -67,7 +60,6 @@
 #'      xPoly = NULL,
 #'      totalLengthKm = 1000,
 #'      angle = 0,
-#'      outFile = NULL,
 #'      minSpace = NULL,
 #'      maxSpace = NULL)
 #'
@@ -93,9 +85,7 @@ makeLines <- function(sPoly,
               minSpace = NULL,
               maxSpace = NULL,
               optimTol = 0.01,
-              optimQuick = FALSE,
-              outFile = NULL,
-              overwrite = TRUE) {
+              optimQuick = FALSE) {
 
   # Functions below interpret angle = 90 to be North-South and 0 East-West
   # Convert so user inputs are more intuitive 0 = N-S, 90 = E-W
@@ -344,10 +334,6 @@ makeLines <- function(sPoly,
     # approxRatio = optimSpace$minimum/approxSpace
     )
 
-  # Write shapefile
-  if(!is.null(outFile)) {
-    sf::st_write(sfLines, outFile, append = !overwrite)
-  }
 
   # Return sf object and summary
   print(outSumm)
