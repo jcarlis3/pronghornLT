@@ -3,14 +3,15 @@
 \docType{data}
 \name{huntAreas}
 \alias{huntAreas}
-\title{Hunt Areas in Wyoming}
+\title{Pronghorn/antelope Hunt Areas in Wyoming}
 \format{
-An sf data frame with hunt areas in Wyoming
+An sf data frame of 102 pronghorn/antelope hunt areas in Wyoming,
+current as of fall 2022.
 }
 \usage{
 huntAreas
 }
 \description{
-Hunt Areas in Wyoming
+Pronghorn/antelope Hunt Areas in Wyoming
 }
 \keyword{datasets}

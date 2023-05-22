@@ -3,14 +3,15 @@
 \docType{data}
 \name{herdUnits}
 \alias{herdUnits}
-\title{Herd Units in Wyoming}
+\title{Pronghorn/antelope Herd Units in Wyoming}
 \format{
-An sf data frame with herd units in Wyoming
+An sf data frame of 40 pronghorn/antelope herd units in Wyoming,
+current as of fall 2022.
 }
 \usage{
 herdUnits
 }
 \description{
-Herd Units in Wyoming
+Pronghorn/antelope Herd Units in Wyoming
 }
 \keyword{datasets}
