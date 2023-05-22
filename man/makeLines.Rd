@@ -18,6 +18,7 @@ makeLines(
   minSpace = NULL,
   maxSpace = NULL,
   optimTol = 0.01,
+  optimQuick = FALSE,
   outFile = NULL,
   overwrite = TRUE
 )
@@ -64,6 +65,9 @@ optimizing transect placement (default is NULL).}
 deviation from \code{totalLengthKm} expressed as a proportion (default is 0.01).
 When the function fails to find a solution within the specified tolerance an
 error is returned.}
+
+\item{optimQuick}{if TRUE, the initial optimization is used. Helpful for when
+calculations need to fail quickly.}
 
 \item{outFile}{Optional output filename for a saving a spatial layer containing
 the line transects. Typically, this will be a shapefile
