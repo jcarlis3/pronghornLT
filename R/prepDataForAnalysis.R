@@ -268,7 +268,7 @@ prepDataForAnalysis <- function(inputFile = NULL,
       nrow(sdf[sdf$siteID == unique.sites[i] &
                  sdf$event == "End transect",])
     if (!(nrow.start == 1 & nrow.end == 1)) {
-      fail.sites <- c(fail.sites, i)
+      fail.sites <- c(fail.sites, unique.sites[i])
     }
   }
   if (!is.null(fail.sites)) {
