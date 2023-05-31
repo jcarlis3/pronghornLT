@@ -332,6 +332,11 @@ prepDataForAnalysis <- function(inputFile = NULL,
     sf::st_cast("LINESTRING") %>%
     dplyr::select(.data$siteID, .data$geometry)
 
+  # add transect length
+  lLength <- sf::st_length(l)
+  lLength <- units::set_units(lLength, "km")
+  l$Length <- lLength
+
   # Check
   # plot(sf::st_geometry(e))
   # plot(sf::st_geometry(l), add=TRUE)
