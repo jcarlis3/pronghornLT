@@ -7,8 +7,6 @@
 #' @param sPoly \code{sf} object, the input polygon within which line transects
 #'  will be generated. The coordinate system
 #'  must use meters as the linear unit (e.g. EPSG=26913)
-#' @param xPoly \code{sf} object, optional input polygon that defines an
-#' exclusion area where line transects will not be generated.
 #' @param totalLengthKm Total length of transects to generate (in kilometers)
 #' @param angle Orientation of the transects. \code{angle = 0} produces
 #' transects oriented North-South (the default), \code{angle = 90} produces
@@ -73,7 +71,6 @@
 
 
 makeLines <- function(sPoly,
-              xPoly = NULL,
               totalLengthKm,
               angle = 0,
               minLengthKm = 2.0,
@@ -96,35 +93,11 @@ makeLines <- function(sPoly,
   minLength <- minLengthKm*1000
 
   # union sPoly with itself & extract coordinates
+  sPoly <- sf::st_combine(sPoly)
   sPoly <- sf::st_union(sPoly)
-  polyCoords <- sf::st_coordinates(sPoly)
-
-  # initialize list for spatstat.geom::owin()
-  owinList <- list(list(x = rev(polyCoords[,1]), y = rev(polyCoords[,2])))
-
-  # if xPoly is passed
-  if (!is.null(xPoly)) {
-
-    # If needed, transform xPoly to be in same crs as sPoly
-    if (st_crs(xPoly) != st_crs(sPoly)) {
-      xPoly <- sf::st_transform(xPoly, crs = sf::st_crs(sPoly))
-    }
-
-    # convert xPoly to POLYGON if MULTIPOLYGON
-    if ("sfc_MULTIPOLYGON" %in% class(xPoly$geometry)) {
-      xPoly <- sf::st_cast(xPoly, "POLYGON", warn = FALSE)
-    }
-
-    # then append cutouts for spatstat.geom::owin() to the owinList
-    for (row in 1:nrow(xPoly)) {
-      xCoords <- sf::st_coordinates(xPoly[row,])
-      listAppend <- list(x = xCoords[,1], y = xCoords[,2])
-      owinList <- append(owinList, list(listAppend))
-    }
-  }
 
   # create spatstat window using owinList
-  polyWin <- spatstat.geom::owin(poly = owinList)
+  polyWin <- spatstat.geom::as.owin(sPoly)
 
   # Estimate approx line spacing (using area)
   totSqKM <- as.numeric(sf::st_area(sPoly)*1e-06)
@@ -208,11 +181,15 @@ makeLines <- function(sPoly,
       huntAreas <- sf::st_transform(huntAreas, crs = sf::st_crs(sPoly))
     }
 
-    # get hunt area pertinent to sPoly
-    haPoly <- sf::st_difference(sPoly, huntAreas$geometry)
+    # get hunt areas pertinent to sPoly
+    sPolygons <- sf::st_cast(sPoly, "POLYGON")
+    sCenters <- sf::st_centroid(sPolygons)
+    haIntersect <- c(sf::st_intersects(huntAreas, sCenters))
+    haIntersect <- which(haIntersect %in% 1:nrow(huntAreas))
+    haPoly <- huntAreas[haIntersect,]
 
     # create outline of herd unit & cast
-    outline <- sf::st_cast(sPoly, "MULTILINESTRING")
+    outline <- sf::st_cast(sf::st_union(haPoly), "MULTILINESTRING")
 
     # buffer this outline (to avoid placing pts on hu border)
     outlineBuffer <- sf::st_buffer(outline, units::as_units(50, "m"))
@@ -221,7 +198,7 @@ makeLines <- function(sPoly,
     haBorders <- sf::st_cast(haPoly, "MULTILINESTRING")
 
     # remove outer borders
-    haBorders <- sf::st_difference(haBorders, outlineBuffer)
+    haBorders <- sf::st_difference(haBorders$geometry, outlineBuffer)
 
     # get intersections as points
     intersectPoints <- sf::st_intersection(sfLines, haBorders)
