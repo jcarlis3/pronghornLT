@@ -24,13 +24,8 @@ cutPoly <- function(sPoly, xPoly) {
   xPoly <- sf::st_combine(xPoly)
 
   # take difference
-  diffPoly <- sf::st_difference(sf::st_geometry(sPoly), xPoly)
-
-  # combine
-  diffPoly <- sf::st_combine(diffPoly)
-
-  # cast to sf
-  diffPoly <-sf::st_as_sf(diffPoly)
+  st_agr(sPoly) = "constant"
+  diffPoly <- sf::st_difference(sPoly, xPoly)
 
   # return
   return(diffPoly)

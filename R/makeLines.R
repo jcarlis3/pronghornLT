@@ -92,8 +92,10 @@ makeLines <- function(sPoly,
   targLenM <- totalLengthKm*1000
   minLength <- minLengthKm*1000
 
-  # union sPoly with itself & extract coordinates
-  sPoly <- sf::st_combine(sPoly)
+  # extract HUNTNAME for considerHuntArea
+  sHUNTNAMES <- unique(sPoly$HUNTNAME)
+
+  # union sPoly with itself
   sPoly <- sf::st_union(sPoly)
 
   # create spatstat window using owinList
@@ -176,29 +178,26 @@ makeLines <- function(sPoly,
   # split transects at hunt areas?
   if (considerHuntArea) {
 
+    # get relevant hunt areas
+    huntAreasIn <- huntAreas %>% filter(HUNTNAME %in% sHUNTNAMES)
+
     # If needed, project hunt area object to same crs as sPoly
     if (st_crs(huntAreas) != st_crs(sPoly)) {
-      huntAreas <- sf::st_transform(huntAreas, crs = sf::st_crs(sPoly))
+      huntAreasIn <- sf::st_transform(huntAreasIn, crs = sf::st_crs(sPoly))
     }
 
-    # get hunt areas pertinent to sPoly
-    sPolygons <- sf::st_cast(sPoly, "POLYGON")
-    sCenters <- sf::st_centroid(sPolygons)
-    haIntersect <- c(sf::st_intersects(huntAreas, sCenters))
-    haIntersect <- which(haIntersect %in% 1:nrow(huntAreas))
-    haPoly <- huntAreas[haIntersect,]
-
     # create outline of herd unit & cast
-    outline <- sf::st_cast(sf::st_union(haPoly), "MULTILINESTRING")
+    outline <- sf::st_cast(sf::st_union(huntAreasIn), "MULTILINESTRING")
 
     # buffer this outline (to avoid placing pts on hu border)
     outlineBuffer <- sf::st_buffer(outline, units::as_units(50, "m"))
 
     # cast borders to multilinestring
-    haBorders <- sf::st_cast(haPoly, "MULTILINESTRING")
+    haBorders <- sf::st_cast(huntAreasIn$geometry, "MULTILINESTRING")
 
     # remove outer borders
-    haBorders <- sf::st_difference(haBorders$geometry, outlineBuffer)
+    haBorders <- sf::st_difference(haBorders, outlineBuffer)
+    haBorders <- sf::st_cast(haBorders, "MULTILINESTRING")
 
     # get intersections as points
     intersectPoints <- sf::st_intersection(sfLines, haBorders)

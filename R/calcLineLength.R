@@ -51,18 +51,8 @@ calcLineLength <- function(occupiedPolygon,
                            targetGroups = 300,
                            avgGroupSize = 2.3) {
 
-
-  # Special handling for polygons with multiple features
-  if (nrow(occupiedPolygon) > 1) {
-
-    # Issue warning
-    warning("Your input polygon has >1 feature and has been dissolved into 1 feature.")
-
-    # Union for multiple features
-    occupiedPolygon <- sf::st_union(occupiedPolygon)
-
-  }
-
+  # Union for multiple features
+  occupiedPolygon <- sf::st_union(occupiedPolygon)
 
   # Calculate area
   area <- sf::st_area(occupiedPolygon)
