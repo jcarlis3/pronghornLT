@@ -1,7 +1,8 @@
 #' cutPoly
 #'
 #' @description
-#' This function cuts out holes in a given polygon.
+#' This function cuts out holes in a given polygon by transforming the crs' to
+#' match and then by differencing the 2 polygons.
 #'
 #' @param sPoly \code{sf} object, the input polygon within which line transects
 #'  will be generated. The coordinate system
