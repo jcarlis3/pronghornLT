@@ -1,11 +1,50 @@
 #' mapLT
 #'
 #' @description
-#' quick wrapper for leaflet maps
+#' Maps hunt area and/or herd unit polygons, cutouts (if applicable), and survey lines (if applicable).
 #'
-#' @param herdPoly sf object, herd unit boundary (sample frame).
-#' @param cutoutPoly sf object, area excluded from sample frame.
-#' @param lines sf object, transect lines.
+#' @param herdPoly sf object, herd unit and/or hunt area boundary (sample frame).
+#' @param cutoutPoly optional sf object, area excluded from sample frame.
+#' @param lines optional sf object generated from \code{\link{makeLines}}, transect lines.
+#'
+#' @examples
+#' \dontrun{
+#' library(sf)
+#' library(dplyr)
+#'
+#' # get hunt area polygons
+#' poly <- huntAreas %>%
+#'   filter(HERDNAME %in% c("Badwater", "North Natrona"))
+#'
+#' # map
+#' mapLT(poly)
+#'
+#' # get cutout
+#' x <- st_read("example_cutout.kml")
+#'
+#' # map poly and cutouts
+#' mapLT(poly, x)
+#'
+#' # get poly with cutouts
+#' poly <- cutPoly(poly, x)
+#'
+#' # calculate recommended line length
+#' recLength <- calcLineLength(
+#'   poly,
+#'   N = 20000
+#' )
+#'
+#' # makeLines
+#' lines <- makeLines(
+#'   poly,
+#'   recLength
+#' )
+#'
+#' # map
+#' mapLT(poly, x, lines$lines)
+#' }
+#'
+#' @author Garrett Catlin
 #'
 #' @import leaflet
 #' @importFrom htmltools HTML
