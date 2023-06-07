@@ -2,15 +2,18 @@
 #' @description
 #' quick wrapper for leaflet maps
 #'
+#' @param preppedData List object returned from \code{prepDataForAnalysis}.
+#'
 #' @import leaflet
-#' @import sf
 #' @importFrom htmltools HTML
 #' @importFrom lubridate as_date
+#' @importFrom sf st_transform st_as_sf
+#' @importFrom viridisLite magma
 #' @rawNamespace import(data.table, except = shift)
 #'
 #' @export
 
-mapResults = function(preppedData) {
+mapResults <- function(preppedData) {
 
   # extract lines, points
   l <- sf::st_transform(preppedData$sfLines, crs = 4326)

@@ -42,7 +42,8 @@
 #' }
 #'
 #' @author Tom Prebyl, Jason Carlisle, and Garrett Catlin
-#' @importFrom sf st_difference st_union st_coordinates st_sfc st_bbox st_crs st_length st_write st_linestring st_transform
+#' @importFrom dplyr "%>%" filter
+#' @importFrom sf st_difference st_union st_coordinates st_sfc st_bbox st_crs st_length st_write st_linestring st_transform st_agr
 #' @import spatstat
 #' @import spatstat.geom
 #' @rawNamespace import(data.table, except = shift)
@@ -178,7 +179,8 @@ makeLines <- function(sPoly,
   if (considerHuntArea) {
 
     # get relevant hunt areas
-    huntAreasIn <- huntAreas %>% filter(HUNTNAME %in% sHUNTNAMES)
+    huntAreasIn <- huntAreas %>%
+      dplyr::filter(HUNTNAME %in% sHUNTNAMES)
 
     # If needed, project hunt area object to same crs as sPoly
     if (st_crs(huntAreas) != st_crs(sPoly)) {

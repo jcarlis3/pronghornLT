@@ -6,6 +6,9 @@
 \usage{
 mapResults(preppedData)
 }
+\arguments{
+\item{preppedData}{List object returned from \code{prepDataForAnalysis}.}
+}
 \description{
 quick wrapper for leaflet maps
 }

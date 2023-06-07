@@ -3,9 +3,13 @@
 #' @description
 #' quick wrapper for leaflet maps
 #'
+#' @param herdPoly sf object, herd unit boundary (sample frame).
+#' @param cutoutPoly sf object, area excluded from sample frame.
+#' @param lines sf object, transect lines.
+#'
 #' @import leaflet
-#' @import sf
 #' @importFrom htmltools HTML
+#' @importFrom sf st_transform st_as_sf
 #' @rawNamespace import(data.table, except = shift)
 #'
 #' @export

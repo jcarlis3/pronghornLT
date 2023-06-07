@@ -6,6 +6,13 @@
 \usage{
 mapLT(herdPoly, cutoutPoly = NULL, lines = NULL)
 }
+\arguments{
+\item{herdPoly}{sf object, herd unit boundary (sample frame).}
+
+\item{cutoutPoly}{sf object, area excluded from sample frame.}
+
+\item{lines}{sf object, transect lines.}
+}
 \description{
 quick wrapper for leaflet maps
 }

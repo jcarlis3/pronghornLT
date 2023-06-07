@@ -9,7 +9,7 @@
 #' @param xPoly \code{sf} object, optional input polygon that defines an
 #' exclusion area where line transects will not be generated.
 #'
-#' @importFrom sf st_crs st_transform st_combine st_difference st_as_sf
+#' @importFrom sf st_crs st_transform st_combine st_difference st_agr
 #'
 #' @return A polygon with cutouts
 #'
@@ -24,7 +24,7 @@ cutPoly <- function(sPoly, xPoly) {
   xPoly <- sf::st_combine(xPoly)
 
   # take difference
-  st_agr(sPoly) = "constant"
+  sf::st_agr(sPoly) = "constant"
   diffPoly <- sf::st_difference(sPoly, xPoly)
 
   # return
