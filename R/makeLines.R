@@ -55,7 +55,6 @@
 #'
 #' # Make lines
 #' testLines <- makeLines(sPoly = hu,
-#'      xPoly = NULL,
 #'      totalLengthKm = 1000,
 #'      angle = 0,
 #'      minSpace = NULL,

@@ -83,7 +83,6 @@ hu <- sf::st_read("W:/My Drive/Projects/Pronghorn_ltds/herd_units/Rattlesnake_HU
 
 # Make lines
 testLines <- makeLines(sPoly = hu,
-     xPoly = NULL,
      totalLengthKm = 1000,
      angle = 0,
      minSpace = NULL,
