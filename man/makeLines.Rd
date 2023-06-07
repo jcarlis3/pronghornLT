@@ -6,7 +6,6 @@
 \usage{
 makeLines(
   sPoly,
-  xPoly = NULL,
   totalLengthKm,
   angle = 0,
   minLengthKm = 2,
@@ -25,9 +24,6 @@ makeLines(
 \item{sPoly}{\code{sf} object, the input polygon within which line transects
 will be generated. The coordinate system
 must use meters as the linear unit (e.g. EPSG=26913)}
-
-\item{xPoly}{\code{sf} object, optional input polygon that defines an
-exclusion area where line transects will not be generated.}
 
 \item{totalLengthKm}{Total length of transects to generate (in kilometers)}
 
@@ -87,7 +83,6 @@ hu <- sf::st_read("W:/My Drive/Projects/Pronghorn_ltds/herd_units/Rattlesnake_HU
 
 # Make lines
 testLines <- makeLines(sPoly = hu,
-     xPoly = NULL,
      totalLengthKm = 1000,
      angle = 0,
      minSpace = NULL,
