@@ -96,6 +96,7 @@
 #' @importFrom sf st_as_sf st_cast
 #' @importFrom stats dist na.omit
 #' @importFrom utils menu
+#' @importFrom lubridate ymd_hms ymd as_date
 #' @export
 #'
 #' @examples
@@ -203,9 +204,15 @@ prepDataForAnalysis <- function(inputFile = NULL,
   # the band column
   x$band <- gsub("; Cluster size", "", x$band)
 
+  # time format date/time cols
+  x$Date <- lubridate::ymd(x$Date)
+  x$Time <- lubridate::ymd_hms(x$Time)
+  x$Time <- format(as.POSIXct(x$Time), format = "%H:%M:%S")
+  x$DateTime <- lubridate::ymd_hms(paste0(x$Date," ", x$Time))
+
 
   # Keep only needed columns
-  x <- x[c("siteID", "event", "x", "y", "agl", "s", "band")]
+  x <- x[c("siteID", "event", "x", "y", "agl", "s", "band", "DateTime")]
 
 
   # Drop the "End survey" event
@@ -247,7 +254,7 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
   # Sites data.frame
   sdf <- x[x$event %in% c("Start new transect", "End transect"),
-           c("siteID", "event", "x", "y")]
+           c("siteID", "event", "x", "y", "DateTime")]
 
   # sdf currently has two rows for each transect surveyed (a row for each start
   # and stop location), save that aside as tdf to build transect shp off of.
@@ -327,10 +334,10 @@ prepDataForAnalysis <- function(inputFile = NULL,
   # I think the summarize step is needed, so added a dummy variable s that
   # is then dropped
   l <- e %>%
-    dplyr::group_by(.data$siteID) %>%
-    dplyr::summarize(s = unique(.data$siteID)) %>%
+    dplyr::group_by(siteID) %>%
+    dplyr::summarize(s = unique(siteID), begin = min(DateTime), end = max(DateTime)) %>%
     sf::st_cast("LINESTRING") %>%
-    dplyr::select(.data$siteID, .data$geometry)
+    dplyr::select(siteID, begin, end, geometry)
 
   # add transect length
   lLength <- sf::st_length(l)
@@ -475,9 +482,7 @@ prepDataForAnalysis <- function(inputFile = NULL,
   agl.obs <- mean(ddf$agl, na.rm = TRUE)
 
   # Difference in mean AGL after imputing compared to before imputing
-  agl.obs - agl.all
-
-
+  # agl.obs - agl.all
 
   #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Calculate adjusted distances based on bin midpoints and flight height ----
@@ -528,6 +533,7 @@ prepDataForAnalysis <- function(inputFile = NULL,
   # Plus a row for each transect where nothing was detected (with NAs for most cols)
   distData <- merge(sdf, ddf, all = TRUE)
   distData$id <- NULL
+  distData$DateTime <- NULL
 
 
   # Make some column names easier to work with
