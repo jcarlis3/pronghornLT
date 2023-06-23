@@ -35,23 +35,28 @@
 #' \dontrun{
 #' # Prep data
 #' dataPath <- "C:/Users/jadcarlisle/Desktop/demo"
-#' x <- prepDataForAnalysis(inputFile = file.path(dataPath,
-#'                                               "Data_PronghornLT_Rattlesnake_2022.xlsx"),
-#'                        inputSheet = 1)
+#' x <- prepDataForAnalysis(
+#'   inputFile = file.path(
+#'     dataPath,
+#'     "Data_PronghornLT_Rattlesnake_2022.xlsx"
+#'   ),
+#'   inputSheet = 1
+#' )
 #'
 #' # Fit distance-sampling model to estimate abundance
 #' # Key input data are the x$ddf and x$sdf data.frames from prepDataForAnalysis
-#' fit <- fitDistSampModel(ddf = x$ddf,
-#'                        sdf = x$sdf,
-#'                        keyFun = "hazrate",
-#'                        sidesSurveyed = 1,
-#'                        areaMi2 = 884,
-#'                        bootIterations = 50)
+#' fit <- fitDistSampModel(
+#'   ddf = x$ddf,
+#'   sdf = x$sdf,
+#'   keyFun = "hazrate",
+#'   sidesSurveyed = 1,
+#'   areaMi2 = 884,
+#'   bootIterations = 50
+#' )
 #'
 #' # Print results
 #' fit
 #' }
-
 fitDistSampModel <- function(ddf,
                              sdf,
                              keyFun = "halfnorm",
@@ -59,18 +64,8 @@ fitDistSampModel <- function(ddf,
                              sidesSurveyed = 1,
                              areaMi2,
                              bootIterations = 0) {
-
   # Set seed to make bootstrapping results reproducible
   set.seed(82070)
-
-
-  # Adjust transect lengths to adjust total surveyed area.
-  # Only one side of transect typically surveyed, but Rdistance expects both
-  # sides are.
-  sampFrac <- sidesSurveyed / 2
-  sdf$length <- sampFrac * sdf$lengthKm
-  sdf$lengthKm <- NULL
-
 
   # Set units (required by Rdistance beginning with version 2.2.0)
   # And Rdistance works best if the distance column is named "dist"
@@ -80,36 +75,36 @@ fitDistSampModel <- function(ddf,
   sdf$length <- units::set_units(sdf$length, "km")
   areaMi2 <- units::set_units(areaMi2, "mi2")
 
-
-
   # Fit detection function
   # Specifying outputUnits = "m" will provide distance measures in m
   # and density estimate in mi^2 (we'll convert those to mi^2 in the app)
-  dfunc <- Rdistance::dfuncEstim(formula = dist ~ 1 + groupsize(s),
-                                 detectionData = ddf,
-                                 likelihood = keyFun,
-                                 expansions = 0,
-                                 w.hi = wHi,
-                                 outputUnits = "m")
-
-
+  dfunc <- Rdistance::dfuncEstim(
+    formula = dist ~ 1 + groupsize(s),
+    detectionData = ddf,
+    likelihood = keyFun,
+    expansions = 0,
+    w.hi = wHi,
+    outputUnits = "m"
+  )
   # Estimate abundance
   # Turn off the bootstrap feature if bootIterations input is 0
   if (bootIterations == 0) {
-    ci <- NULL  # Rdistance input to skip bootstrap and not calculate CIs
+    ci <- NULL # Rdistance input to skip bootstrap and not calculate CIs
   } else {
-    ci <- 0.95  # default 95% CI
+    ci <- 0.95 # default 95% CI
   }
 
+  # call to abundEstim
   fit <- Rdistance::abundEstim(dfunc,
-                               detectionData = ddf,
-                               siteData = sdf,
-                               area = areaMi2,
-                               ci = ci,
-                               R = bootIterations,
-                               plot.bs = FALSE,
-                               showProgress = FALSE)
+    detectionData = ddf,
+    siteData = sdf,
+    area = areaMi2,
+    ci = ci,
+    R = bootIterations,
+    plot.bs = FALSE,
+    showProgress = FALSE,
+    singleSided = ifelse(sidesSurveyed == 1, TRUE, FALSE)
+  )
 
   return(fit)
-
 }
