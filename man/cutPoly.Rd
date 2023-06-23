@@ -18,7 +18,8 @@ exclusion area where line transects will not be generated.}
 A polygon with cutouts
 }
 \description{
-This function cuts out holes in a given polygon.
+This function cuts out holes in a given polygon by transforming the crs' to
+match and then by differencing the 2 polygons.
 }
 \examples{
 \dontrun{
