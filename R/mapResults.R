@@ -1,15 +1,30 @@
 #' mapResults
-#' @description
-#' quick wrapper for leaflet maps
 #'
-#' @param preppedData List object returned from \code{prepDataForAnalysis}.
+#' @description
+#' Maps the results of a survey.
+#'
+#' @param preppedData List object returned from \code{\link{prepDataForAnalysis}}.
+#'
+#' @return Returns a leaflet map.
+#'
+#' @examples
+#' \dontrun{
+#'
+#' # Prep data
+#' dat <- prepDataForAnalysis("example.xlsx")
+#'
+#' # Map
+#' mapResults(dat)
+#' }
+#'
+#' @author Garrett Catlin
 #'
 #' @import leaflet
 #' @importFrom htmltools HTML
 #' @importFrom lubridate as_date
 #' @importFrom sf st_transform st_as_sf
 #' @importFrom viridisLite magma
-#' @rawNamespace import(data.table, except = shift)
+#' @importFrom data.table fcase
 #'
 #' @export
 

@@ -18,5 +18,47 @@ exclusion area where line transects will not be generated.}
 A polygon with cutouts
 }
 \description{
-This function cuts out holes in a given polygon
+This function cuts out holes in a given polygon by transforming the crs' to
+match and then by differencing the 2 polygons.
+}
+\examples{
+\dontrun{
+library(sf)
+library(dplyr)
+
+# get hunt area polygons
+poly <- huntAreas \%>\%
+  filter(HERDNAME \%in\% c("Badwater", "North Natrona"))
+
+# map
+mapLT(poly)
+
+# get cutout
+x <- st_read("example_cutout.kml")
+
+# map poly and cutouts
+mapLT(poly, x)
+
+# get poly with cutouts
+poly <- cutPoly(poly, x)
+
+# calculate recommended line length
+recLength <- calcLineLength(
+  poly,
+  N = 20000
+)
+
+# makeLines
+lines <- makeLines(
+  poly,
+  recLength
+)
+
+# map
+mapLT(poly, x, lines$lines)
+}
+
+}
+\author{
+Garrett Catlin
 }

@@ -7,8 +7,25 @@
 mapResults(preppedData)
 }
 \arguments{
-\item{preppedData}{List object returned from \code{prepDataForAnalysis}.}
+\item{preppedData}{List object returned from \code{\link{prepDataForAnalysis}}.}
+}
+\value{
+Returns a leaflet map.
 }
 \description{
-quick wrapper for leaflet maps
+Maps the results of a survey.
+}
+\examples{
+\dontrun{
+
+# Prep data
+dat <- prepDataForAnalysis("example.xlsx")
+
+# Map
+mapResults(dat)
+}
+
+}
+\author{
+Garrett Catlin
 }

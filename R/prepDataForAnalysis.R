@@ -653,7 +653,7 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
   # Return prepped data objects and table of key summaries
   return(list(
-    ddf = ddf,
+    ddf = as.data.frame(ddf),
     sdf = sdf,
     txt = distData,
     sumTable = sumTable,
