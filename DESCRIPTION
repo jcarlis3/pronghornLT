@@ -1,8 +1,8 @@
 Package: pronghornLT
 Type: Package
 Title: Utilities for Pronghorn Line-transect Surveys in Wyoming
-Version: 1.4.7
-Date: 2023-06-07
+Version: 1.4.8
+Date: 2024-03-29
 Authors@R: c(
     person("Jason", "Carlisle",
            email="jason.carlisle@wyo.gov",
@@ -38,4 +38,4 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: TRUE
 LazyDataCompression: bzip2
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
