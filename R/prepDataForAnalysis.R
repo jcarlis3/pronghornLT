@@ -30,6 +30,8 @@
 #'  \item{Cluster size}{For some reason, the CyberTracker output contains two
 #'  columns named "Cluster size".  This function expects the second one to be
 #'  the distance band the pronghorn were detected in.}
+#'  \item{Date}{Date of survey.  Can be blank, but issues a warning if so.}
+#'  \item{Time}{Time of survey.  Can be blank, but issues a warning if so.}
 #' }
 #' @param inputSheet  The sheet (or tab) within the above-specified Excel file
 #' that should be read in. If \code{inputSheet = NULL} (the default), the names
@@ -171,7 +173,9 @@ prepDataForAnalysis <- function(inputFile = NULL,
                      "Flight control",
                      "Latitude",
                      "Longitude",
-                     "Range")
+                     "Range",
+                     "Date",
+                     "Time")
   for (i in expectedNames) {
     if (!i %in% names(x)) {
       stop(

@@ -33,6 +33,8 @@ any additional columns are ignored:
  \item{Cluster size}{For some reason, the CyberTracker output contains two
  columns named "Cluster size".  This function expects the second one to be
  the distance band the pronghorn were detected in.}
+ \item{Date}{Date of survey.  Can be blank, but issues a warning if so.}
+ \item{Time}{Time of survey.  Can be blank, but issues a warning if so.}
 }}
 
 \item{inputSheet}{The sheet (or tab) within the above-specified Excel file
