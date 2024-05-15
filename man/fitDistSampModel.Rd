@@ -52,18 +52,24 @@ This is a thin wrapper around \code{Rdistance::dfuncEstim} and
 \dontrun{
 # Prep data
 dataPath <- "C:/Users/jadcarlisle/Desktop/demo"
-x <- prepDataForAnalysis(inputFile = file.path(dataPath,
-                                              "Data_PronghornLT_Rattlesnake_2022.xlsx"),
-                       inputSheet = 1)
+x <- prepDataForAnalysis(
+  inputFile = file.path(
+    dataPath,
+    "Data_PronghornLT_Rattlesnake_2022.xlsx"
+  ),
+  inputSheet = 1
+)
 
 # Fit distance-sampling model to estimate abundance
 # Key input data are the x$ddf and x$sdf data.frames from prepDataForAnalysis
-fit <- fitDistSampModel(ddf = x$ddf,
-                       sdf = x$sdf,
-                       keyFun = "hazrate",
-                       sidesSurveyed = 1,
-                       areaMi2 = 884,
-                       bootIterations = 50)
+fit <- fitDistSampModel(
+  ddf = x$ddf,
+  sdf = x$sdf,
+  keyFun = "hazrate",
+  sidesSurveyed = 1,
+  areaMi2 = 884,
+  bootIterations = 50
+)
 
 # Print results
 fit
