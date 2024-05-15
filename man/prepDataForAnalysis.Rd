@@ -101,8 +101,10 @@ analysis in Program R or Program DISTANCE.
 \examples{
 \dontrun{
 # Read in Sheet1 of myInputFile.xlsx
-x <- prepDataForAnalysis(inputFile = "C:/Users/myUserName/Desktop/myInputFile.xlsx",
-                    inputSheet = "Sheet1")
+x <- prepDataForAnalysis(
+  inputFile = "C:/Users/myUserName/Desktop/myInputFile.xlsx",
+  inputSheet = "Sheet1"
+)
 
 # Detection data (one row per group detected)
 head(x$ddf)

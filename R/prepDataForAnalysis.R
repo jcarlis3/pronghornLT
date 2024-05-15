@@ -104,8 +104,10 @@
 #' @examples
 #' \dontrun{
 #' # Read in Sheet1 of myInputFile.xlsx
-#' x <- prepDataForAnalysis(inputFile = "C:/Users/myUserName/Desktop/myInputFile.xlsx",
-#'                     inputSheet = "Sheet1")
+#' x <- prepDataForAnalysis(
+#'   inputFile = "C:/Users/myUserName/Desktop/myInputFile.xlsx",
+#'   inputSheet = "Sheet1"
+#' )
 #'
 #' # Detection data (one row per group detected)
 #' head(x$ddf)
@@ -130,14 +132,12 @@
 #' mapview::mapview(x$sfLines, color = "blue", legend = FALSE) +
 #'   mapview::mapview(x$sfPoints, cex = "s", label = "s")
 #' }
-
-
 prepDataForAnalysis <- function(inputFile = NULL,
                                 inputSheet = NULL,
                                 shpCRS = 26913) {
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # File paths ----
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Allow the user to interactively select the input Excel file
   if (is.null(inputFile)) {
@@ -149,14 +149,15 @@ prepDataForAnalysis <- function(inputFile = NULL,
   if (is.null(inputSheet)) {
     sheetNames <- readxl::excel_sheets(inputFile)
     sheetIndex <- menu(sheetNames,
-                       title = "Which sheet in the Excel file contains the input data?")
+      title = "Which sheet in the Excel file contains the input data?"
+    )
     inputSheet <- sheetNames[sheetIndex]
   }
 
 
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Read in Excel file exported by CyberTracker ----
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Read Excel file
   # The .name_repair argument suppresses the following message caused by
@@ -164,18 +165,22 @@ prepDataForAnalysis <- function(inputFile = NULL,
   # New names:
   # • `Cluster size` -> `Cluster size...13`
   # • `Cluster size` -> `Cluster size...16`
-  x <- readxl::read_excel(path = inputFile,
-                          sheet = inputSheet,
-                          .name_repair = "unique_quiet")
+  x <- readxl::read_excel(
+    path = inputFile,
+    sheet = inputSheet,
+    .name_repair = "unique_quiet"
+  )
 
   # Check that expected column names exist
-  expectedNames <- c("Transect number",
-                     "Flight control",
-                     "Latitude",
-                     "Longitude",
-                     "Range",
-                     "Date",
-                     "Time")
+  expectedNames <- c(
+    "Transect number",
+    "Flight control",
+    "Latitude",
+    "Longitude",
+    "Range",
+    "Date",
+    "Time"
+  )
   for (i in expectedNames) {
     if (!i %in% names(x)) {
       stop(
@@ -212,7 +217,7 @@ prepDataForAnalysis <- function(inputFile = NULL,
   x$Date <- lubridate::ymd(x$Date)
   x$Time <- lubridate::ymd_hms(x$Time)
   x$Time <- format(as.POSIXct(x$Time), format = "%H:%M:%S")
-  x$DateTime <- lubridate::ymd_hms(paste0(x$Date," ", x$Time))
+  x$DateTime <- lubridate::ymd_hms(paste0(x$Date, " ", x$Time))
 
 
   # Keep only needed columns
@@ -220,12 +225,12 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
   # Drop the "End survey" event
-  x <- x[x$event != "End survey",]
+  x <- x[x$event != "End survey", ]
 
   # Drop any rows with NA in event
   # An example dataset from Lee for Centennial included a row with date and
   # time, but all other rows were NAs
-  x <- x[!is.na(x$event),]
+  x <- x[!is.na(x$event), ]
 
 
   # Make siteID a factor (might come in as numeric or character)
@@ -247,9 +252,9 @@ prepDataForAnalysis <- function(inputFile = NULL,
   }
 
 
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Split data into sites and detections ----
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Easier to handle data in two sets.
   # Sites data.frame will have one row for each transect surveyed
   # (analogous to "Line transect" layer in Program DISTANCE)
@@ -257,8 +262,10 @@ prepDataForAnalysis <- function(inputFile = NULL,
   # (analogous to "Observation" layer in Program DISTANCE)
 
   # Sites data.frame
-  sdf <- x[x$event %in% c("Start new transect", "End transect"),
-           c("siteID", "event", "x", "y", "DateTime")]
+  sdf <- x[
+    x$event %in% c("Start new transect", "End transect"),
+    c("siteID", "event", "x", "y", "DateTime")
+  ]
 
   # sdf currently has two rows for each transect surveyed (a row for each start
   # and stop location), save that aside as tdf to build transect shp off of.
@@ -274,10 +281,10 @@ prepDataForAnalysis <- function(inputFile = NULL,
   for (i in 1:length(unique.sites)) {
     nrow.start <-
       nrow(sdf[sdf$siteID == unique.sites[i] &
-                 sdf$event == "Start new transect",])
+        sdf$event == "Start new transect", ])
     nrow.end <-
       nrow(sdf[sdf$siteID == unique.sites[i] &
-                 sdf$event == "End transect",])
+        sdf$event == "End transect", ])
     if (!(nrow.start == 1 & nrow.end == 1)) {
       fail.sites <- c(fail.sites, unique.sites[i])
     }
@@ -304,35 +311,38 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
 
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Calculate length of each transect ----
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Use euclidean distance function to calculate length of transect (in km)
   # Assumes projected coordinated system (e.g., not decimal degrees of lat/lon)
   sdf <- do.call(rbind, lapply(unique.sites, function(i) {
-    p <- sdf[sdf$siteID == i,]
+    p <- sdf[sdf$siteID == i, ]
 
     l <- as.numeric(dist(p[c("x", "y")], method = "euclidean")) / 1e3
 
-    r <- data.frame(siteID = i,
-                    lengthKm = l)
+    r <- data.frame(
+      siteID = i,
+      lengthKm = l
+    )
 
     return(r)
-
   }))
 
 
 
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Create sf object of transects as surveyed ----
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Spatial data - transects
   # Create end points
-  e <- sf::st_as_sf(x = tdf,
-                    coords = c("x", "y"),
-                    crs = shpCRS)
+  e <- sf::st_as_sf(
+    x = tdf,
+    coords = c("x", "y"),
+    crs = shpCRS
+  )
 
   # Convert end points to lines
   # I think the summarize step is needed, so added a dummy variable s that
@@ -352,31 +362,50 @@ prepDataForAnalysis <- function(inputFile = NULL,
   # plot(sf::st_geometry(e))
   # plot(sf::st_geometry(l), add=TRUE)
 
-
+  # get appx. transect spacing
+  transectSpacing <- l |>
+    dplyr::group_by(siteID) |>
+    sf::st_line_sample(n = 100) |>
+    sf::st_as_sf() |>
+    sf::st_distance() |>
+    as.data.frame.table(responseName = "Dist") |>
+    dplyr::filter(Var1 != Var2) |>
+    dplyr::group_by(Var1) |>
+    dplyr::slice_min(order_by = Dist) |>
+    dplyr::ungroup() |>
+    dplyr::filter(Dist == max(Dist)) |>
+    dplyr::slice_sample(n = 1) |>
+    getElement("Dist") |>
+    units::set_units("km") |>
+    units::drop_units()
 
   # Spatial data - detections
   # Create points for pronghorn detections (where the plane was when detection
   # was recorded)
 
   # Create points
-  p <- sf::st_as_sf(x = ddf,
-                    coords = c("x", "y"),
-                    crs = shpCRS)
+  p <- sf::st_as_sf(
+    x = ddf,
+    coords = c("x", "y"),
+    crs = shpCRS
+  )
 
 
 
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Impute missing flight heights ----
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Mean AGL for all data (that have AGLs, before imputing)
   agl.all <- mean(ddf$agl, na.rm = TRUE)
 
   # Summary of AGL values (NA vs not) by transect
   agl.site <- ddf %>%
     dplyr::group_by(.data$siteID, .drop = FALSE) %>%
-    dplyr::summarize(n = length(.data$agl),
-                     nNA = sum(is.na(.data$agl)),
-                     nGood = .data$n - .data$nNA)
+    dplyr::summarize(
+      n = length(.data$agl),
+      nNA = sum(is.na(.data$agl)),
+      nGood = .data$n - .data$nNA
+    )
 
 
 
@@ -392,7 +421,7 @@ prepDataForAnalysis <- function(inputFile = NULL,
   # First, add detection ID within each transect
   ddf <- do.call(rbind, lapply(unique.sites, function(i) {
     if (i %in% ddf$siteID) {
-      p <- ddf[ddf$siteID == i,]
+      p <- ddf[ddf$siteID == i, ]
       p$id <- 1:nrow(p)
       return(p)
     } else {
@@ -414,7 +443,7 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
     # Detections for the transect of interest
-    d <- ddf[ddf$siteID == unique.sites[i],]
+    d <- ddf[ddf$siteID == unique.sites[i], ]
 
 
     # If all agls are valid (no NAs)
@@ -427,20 +456,20 @@ prepDataForAnalysis <- function(inputFile = NULL,
         # this site and those with usable agl values
         good.sites <-
           agl.site[(agl.site$nGood > 0 |
-                      agl.site$siteID == unique.sites[i]),]
+            agl.site$siteID == unique.sites[i]), ]
         good.sites$id <-
-          1:nrow(good.sites)  # numeric way to index sites, clunky
+          1:nrow(good.sites) # numeric way to index sites, clunky
         use.sites.id <-
-          c(good.sites$id[good.sites$siteID == unique.sites[i]] - 1,
-            good.sites$id[good.sites$siteID == unique.sites[i]] + 1)
+          c(
+            good.sites$id[good.sites$siteID == unique.sites[i]] - 1,
+            good.sites$id[good.sites$siteID == unique.sites[i]] + 1
+          )
         use.sites <-
           as.character(good.sites$siteID[good.sites$id %in% use.sites.id])
         d$agl <-
-          mean(ddf$agl[ddf$siteID %in% use.sites], na.rm = TRUE)  # mean at two transects
+          mean(ddf$agl[ddf$siteID %in% use.sites], na.rm = TRUE) # mean at two transects
 
         return(d)
-
-
       } else {
         # Cases with some NAs (but not all) in agl
         good.agls <- na.omit(d$agl)
@@ -457,17 +486,16 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
         if (nrow(d) >= 3) {
           # Helper indices (row numbers) of rows with NAs and without NAs in agl
-          na.rows <-  which(is.na(d$agl))
+          na.rows <- which(is.na(d$agl))
           good.rows <- which(!is.na(d$agl))
 
           for (j in na.rows) {
             pre.agl <-
-              d$agl[j - 1]  # previous agl (in order, so any NA should already be resolved)
+              d$agl[j - 1] # previous agl (in order, so any NA should already be resolved)
             post.agl <-
-              d$agl[min(good.rows[good.rows > j])]  # next good agl
+              d$agl[min(good.rows[good.rows > j])] # next good agl
 
             d$agl[j] <- mean(c(pre.agl, post.agl))
-
           }
         }
         return(d)
@@ -488,9 +516,9 @@ prepDataForAnalysis <- function(inputFile = NULL,
   # Difference in mean AGL after imputing compared to before imputing
   # agl.obs - agl.all
 
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Calculate adjusted distances based on bin midpoints and flight height ----
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Nominal flight height (ft)
   agl.target <- 300
@@ -504,11 +532,11 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
   # Insert nominal distance for band midpoint
   ddf$adjustedDist <- NA
-  ddf$adjustedDist[grepl("Alpha", ddf$band)] <-   cutMids[1]
-  ddf$adjustedDist[grepl("Bravo", ddf$band)] <-   cutMids[2]
+  ddf$adjustedDist[grepl("Alpha", ddf$band)] <- cutMids[1]
+  ddf$adjustedDist[grepl("Bravo", ddf$band)] <- cutMids[2]
   ddf$adjustedDist[grepl("Charlie", ddf$band)] <- cutMids[3]
-  ddf$adjustedDist[grepl("Delta", ddf$band)] <-   cutMids[4]
-  ddf$adjustedDist[grepl("Echo", ddf$band)] <-    cutMids[5]
+  ddf$adjustedDist[grepl("Delta", ddf$band)] <- cutMids[4]
+  ddf$adjustedDist[grepl("Echo", ddf$band)] <- cutMids[5]
 
   # Adjust based on ratio of observed flight height to nominal flight height
   # for each detection
@@ -516,9 +544,9 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
 
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Calculate adjusted distance band cutpoints based on flight height ----
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Overall ratio of observed flight height to nominal flight height
   agl.ratio <- agl.obs / agl.target
@@ -528,9 +556,9 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
 
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Format for .txt file ready for DISTANCE import ----
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Merge into what Program DISTANCE calls a "flat file"
   # A row for each detection, that includes the transect length
@@ -561,9 +589,9 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
 
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Calculate study summaries to aid troubleshooting ----
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Number of transects
   n.trans <- length(unique(sdf$siteID))
@@ -606,9 +634,9 @@ prepDataForAnalysis <- function(inputFile = NULL,
 
 
 
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Create table of key data summaries ----
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Key summaries in data.frame format easier to display in shiny app
   sumTable <- data.frame(
@@ -618,6 +646,7 @@ prepDataForAnalysis <- function(inputFile = NULL,
       "Number of transects without pronghorn detected",
       "Total transect length surveyed (km)",
       "Total transect length surveyed (mi)",
+      "Approximate transect spacing (km)",
       "Number of groups detected (any distance)",
       "Number of groups detected (within adjusted survey strip)",
       "Number of individuals detected (any distance)",
@@ -627,13 +656,14 @@ prepDataForAnalysis <- function(inputFile = NULL,
       "Number of groups missing flight height",
       "Mean flight height (ft) at detections after imputing missing values",
       "Ratio of actual/nominal flight height to adjust bin cutpoints"
-    ) ,
+    ),
     Value = c(
       n.trans,
       n.trans - n.trans.no,
       n.trans.no,
       total.km,
       total.km * 0.621371,
+      transectSpacing,
       n.detects,
       n.detects.trunc,
       n.detects.ind,
@@ -647,9 +677,9 @@ prepDataForAnalysis <- function(inputFile = NULL,
   )
 
 
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
   # Return list of R objects (nothing written to file) ----
-  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
   # Return prepped data objects and table of key summaries
   return(list(
@@ -660,5 +690,4 @@ prepDataForAnalysis <- function(inputFile = NULL,
     sfLines = l,
     sfPoints = p
   ))
-
 }
